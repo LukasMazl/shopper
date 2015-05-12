@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html ng-app="estateListingApp">
+<head>
+
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sreality.cz listings...</title>
+
+
+
+<!-- jquery -->
+<script type="text/javascript" src="webjars/jquery/2.1.3/jquery.min.js"></script>
+<!-- jquery - optional -->
+<script type="text/javascript" src="webjars/jquery-mousewheel/3.1.12/jquery.mousewheel.js"></script>
+
+<!-- bootstrap -->
+<link rel="stylesheet" href="webjars/bootstrap/3.3.4/css/bootstrap.min.css">
+<script type="text/javascript" src="webjars/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<!-- bootstrap - optional -->
+<link rel="stylesheet" href="webjars/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+
+<!-- angularjs -->
+<script type="text/javascript" src="webjars/angularjs/1.3.15/angular.min.js"></script>
+<script type="text/javascript" src="webjars/ngInfiniteScroll/1.1.2/ng-infinite-scroll.min.js"></script>
+
+<!-- angularjs + bootstrap -->
+<script src="webjars/angular-ui-bootstrap/0.12.1-1/ui-bootstrap-tpls.min.js"></script>
+
+<!-- fancybox -->
+<link rel="stylesheet" href="webjars/fancybox/2.1.5/jquery.fancybox.css" type="text/css" media="screen" />
+<script type="text/javascript" src="webjars/fancybox/2.1.5/jquery.fancybox.pack.js"></script>
+<!-- fancybox - optional -->
+<link rel="stylesheet" href="webjars/fancybox/2.1.5/helpers/jquery.fancybox-buttons.css" type="text/css" media="screen" />
+<script type="text/javascript" src="webjars/fancybox/2.1.5/helpers/jquery.fancybox-buttons.js"></script>
+<script type="text/javascript" src="webjars/fancybox/2.1.5/helpers/jquery.fancybox-media.js"></script>
+<link rel="stylesheet" href="webjars/fancybox/2.1.5/helpers/jquery.fancybox-thumbs.css" type="text/css" media="screen" />
+<script type="text/javascript" src="webjars/fancybox/2.1.5/helpers/jquery.fancybox-thumbs.js"></script>
+
+<!-- custom -->
+<script type="text/javascript" src="./js/estateListing.js"></script>
+
+
+
+<style>
+body {
+}
+
+.estateDataTable th {
+	/* padding-left: 1em; */
+	padding-right: 1em;
+	text-align: right;
+	font-weight: normal;
+}
+
+.estateDataTable td {
+	padding-left: 1em;
+	/* padding-right: 1em; */
+}
+
+.estateImage {
+	/* clear: both; */
+	/* display: table-cell; */
+	/* float: left; */
+	margin-bottom: 1em;
+	margin-top: 1em;
+	max-width: 100%;
+	/* padding: 0.5em; */
+	/* vertical-align: middle; */
+}
+</style>
+
+
+
+</head>
+<body>
+
+
+
+	<div class="container estates" ng-controller="estateListingController">
+		<div class="estate" ng-repeat="estate in estates">
+			<a href="{{estate.url}}"><h3>{{estate.metaDescription}}</h3></a>
+			<div class="row">
+				<div class="col-lg-4 col-md-5 col-xs-12">
+					<table class="estateDataTable">
+						<tr>
+							<th>Datum:</th>
+							<td>{{timestampToLocaleDateString(estate.updatedAt)}}</td>
+						</tr>
+						<tr>
+							<th>Adresa:</th>
+							<td>{{estate.address}}</td>
+						</tr>
+						<tr>
+							<th>Stav objektu:</th>
+							<td>{{estate.state}}</td>
+						</tr>
+						<tr>
+							<th>Plocha zastavěná:</th>
+							<td>{{estate.areaBuild}} m<sup>2</sup></td>
+						</tr>
+						<tr>
+							<th>Užitná plocha:</th>
+							<td>{{estate.areaUsable}} m<sup>2</sup></td>
+						</tr>
+						<tr>
+							<th>Plocha podlahová:</th>
+							<td>{{estate.floorUsable}} m<sup>2</sup></td>
+						</tr>
+						<tr>
+							<th>Plocha pozemku:</th>
+							<td>{{estate.areaTotal}} m<sup>2</sup></td>
+						</tr>
+						<tr>
+							<th>Plocha zahrady:</th>
+							<td>{{estate.areaGarden}} m<sup>2</sup></td>
+						</tr>
+						<tr>
+							<th>Odkazy:</th>
+							<td><a class="fancyboxIframe fancybox.iframe" href="{{estate.url}}">sreality.cz</a> <br /> <a
+								class="fancyboxIframe fancybox.iframe" href="{{constructGoogleMapsUrl(estate.address)}}">maps.google.com</a></td>
+						</tr>
+					</table>
+				</div>
+				<div class="col-lg-8 col-md-7 col-xs-12">{{estate.description}}</div>
+			</div>
+			<div class="row">
+				<div class="col-lg-3 col-md-4 col-xs-6" ng-repeat="image in estate.images">
+					<a class="fancyboxImage" rel="{{'estate-' + estate.srealityId}}" href="{{image.url}}"> <img class="estateImage"
+						ng-src="{{smallImageUrl(image.url)}}" alt="{{image.description}}" height="189" width="248" />
+					</a>
+				</div>
+			</div>
+			<div style="clear: both;"></div>
+		</div>
+		<pagination ng-model="pageNumber" total-items="totalEstates" max-size="maxNumberOfPageNumbers" boundary-links="true" />
+	</div>
+
+
+
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$(".fancyboxImage").fancybox({
+				type : 'image',
+				beforeShow : function() {
+					var alt = this.element.find('img').attr('alt');
+					this.inner.find('img').attr('alt', alt);
+					this.title = alt;
+				},
+				openEffect : 'none',
+				closeEffect : 'none'
+			});
+			$(".fancyboxIframe").fancybox({
+			// maxWidth : 800,
+			// maxHeight : 600,
+			// fitToView : false,
+			// width : '80%',
+			// height : '80%',
+			// autoSize : false,
+			// closeClick : false,
+			// openEffect : 'none',
+			// closeEffect : 'none'
+			});
+		});
+	</script>
+
+
+
+</body>
+</html>
