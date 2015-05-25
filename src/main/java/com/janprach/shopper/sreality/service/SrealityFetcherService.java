@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 
 import com.codepoetics.protonpack.StreamUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.janprach.shopper.config.SrealityFetcherConfig;
 import com.janprach.shopper.sreality.api.EstateListing;
 import com.janprach.shopper.sreality.api.EstateListing.EstateListingEmbedded.EstateSummary;
 import com.janprach.shopper.sreality.entity.Estate;
@@ -41,6 +42,7 @@ public class SrealityFetcherService {
 	private final Client client;
 	private final EstateService estateService;
 	private final ObjectMapper objectMapper;
+	private final SrealityFetcherConfig srealityFetcherConfig;
 	private final SrealityUrlTranslationService srealityUrlTranslationService;
 
 	// @Scheduled(cron = "${com.janprach.shopper.sreality.cron}")
@@ -98,15 +100,15 @@ public class SrealityFetcherService {
 		log.info("Fetching estate listing page {} (x{}) ...", page, perPage);
 		try {
 			val estateListingRespose = this.fetchSrealityEstate(wt -> {
-				return wt
-						.queryParam("category_main_cb", "2") // domy
-						// .queryParam("category_sub_cb", "37|39") // rodinne-domy nebo vily
-						.queryParam("category_type_cb", "1") // prodej
-						// .queryParam("czk_price_summary_order2", "0|15000000") // od 0 do 15000000
-						// .queryParam("locality_district_id", "5006") // praha-6
-						.queryParam("locality_region_id", "10") // praha
-						.queryParam("per_page", Integer.toString(sanitizedPerPage))
-						.queryParam("page", Integer.toString(sanitizedPage));
+				wt = this.addParam(wt, "category_main_cb", srealityFetcherConfig.getCategoryMain());
+				wt = this.addParam(wt, "category_sub_cb", srealityFetcherConfig.getCategorySub());
+				wt = this.addParam(wt, "category_type_cb", srealityFetcherConfig.getCategoryType());
+				wt = this.addParam(wt, "locality_district_id", srealityFetcherConfig.getLocalityDistrict());
+				wt = this.addParam(wt, "locality_region_id", srealityFetcherConfig.getLocalityRegion());
+				wt = this.addParam(wt, "czk_price_summary_order2", srealityFetcherConfig.getPriceRange());
+				wt = wt.queryParam("per_page", Integer.toString(sanitizedPerPage));
+				wt = wt.queryParam("page", Integer.toString(sanitizedPage));
+				return wt;
 			});
 			val estateListing = estateListingRespose.readEntity(com.janprach.shopper.sreality.api.EstateListing.class);
 			return Optional.of(estateListing);
@@ -125,6 +127,7 @@ public class SrealityFetcherService {
 	private Response fetchSrealityEstate(final Function<WebTarget, WebTarget> webTargetModifier) {
 		val estatesWebTarget = this.client.target("http://www.sreality.cz").path("/api/cs/v1/estates");
 		val webTarget = webTargetModifier.apply(estatesWebTarget);
+		log.debug("Fetching {}", webTarget.getUri());
 		return webTarget.request(MediaType.APPLICATION_JSON_TYPE)
 				.header("User-Agent", this.getClass().getSimpleName() + " v0.0.1").get();
 	}
@@ -180,5 +183,13 @@ public class SrealityFetcherService {
 				&& Objects.equal(a.getSrealityId(), b.getSrealityId())
 				&& Objects.equal(a.getState(), b.getState())
 				&& Objects.equal(a.getTitle(), b.getTitle());
+	}
+
+	private WebTarget addParam(final WebTarget webTarget, final String name, final String value) {
+		if (value == null) {
+			return webTarget;
+		} else {
+			return webTarget.queryParam(name, value);
+		}
 	}
 }
