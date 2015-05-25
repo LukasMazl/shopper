@@ -25,7 +25,7 @@ estateListingModule.controller('estateListingController', function ($scope, $htt
   };
 
   $scope.$watch('pageNumber + pageSize', function() {
-	  fetchEstates();
+      fetchEstates();
   });
 
   $scope.timestampToLocaleDateString = function(timestamp) {
