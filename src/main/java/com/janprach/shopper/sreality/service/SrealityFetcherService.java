@@ -71,11 +71,11 @@ public class SrealityFetcherService {
 
 	Stream<Estate> fetchEstates() {
 		val estates = this.fetchEstateSummaries().map(estateSummary -> {
-			val estateHashId = estateSummary.getHashId();
+			final Long estateHashId = estateSummary.getHashId();
 			try {
-				val estateResponse = this.fetchEstate(estateHashId);
-				val estateResponseString = estateResponse.readEntity(String.class);
-				val estate = this.parseEstate(estateHashId, estateResponseString);
+				final Response estateResponse = this.fetchEstate(estateHashId);
+				final String estateResponseString = estateResponse.readEntity(String.class);
+				final Estate estate = this.parseEstate(estateHashId, estateResponseString);
 				return Optional.of(estate);
 			} catch (final Exception e) {
 				log.error("Failed fetching or parsing estate id {}.", estateHashId, e);
@@ -156,9 +156,9 @@ public class SrealityFetcherService {
 				estateUrl, zoom, new ArrayList<Image>(), new ArrayList<RawResponse>());
 
 		val images = estate.getEmbedded().getImages().stream().map(image -> {
-			val imageDescription = image.getLinks().getSelf().getTitle();
-			val imageSrealityId = image.getId();
-			val imageUrl = image.getLinks().getSelf().getHref();
+			final String imageDescription = image.getLinks().getSelf().getTitle();
+			final Long imageSrealityId = image.getId();
+			final String imageUrl = image.getLinks().getSelf().getHref();
 			return new Image(imageDescription, estateEntity, imageSrealityId, imageUrl);
 		}).collect(Collectors.toList());
 		estateEntity.setImages(images);
