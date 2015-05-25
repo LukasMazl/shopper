@@ -86,8 +86,9 @@ public class SrealityFetcherService {
 	Stream<EstateSummary> fetchEstateSummaries() {
 		val infiniteEstateListings = IntStream.iterate(1, page -> page + 1).boxed()
 				.map(page -> this.fetchEstateListing(page, ESTATE_SUMMARIES_PER_PAGE));
-		val estateListings = StreamUtils.takeWhile(infiniteEstateListings, el -> el.isPresent()).map(el -> el.get());
-		return estateListings.flatMap(el -> el.getEmbedded().getEstates().stream());
+		val estateListings = StreamUtils.takeWhile(infiniteEstateListings,
+				el -> el.isPresent() && !el.get().getEmbedded().getEstates().isEmpty());
+		return estateListings.flatMap(el -> el.get().getEmbedded().getEstates().stream());
 	}
 
 	private Optional<EstateListing> fetchEstateListing(final int page, final int perPage) {
