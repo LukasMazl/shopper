@@ -25,12 +25,14 @@ import org.springframework.stereotype.Component;
 import com.codepoetics.protonpack.StreamUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.janprach.shopper.config.SrealityFetcherConfig;
+import com.janprach.shopper.sreality.api.Estate.Geo;
 import com.janprach.shopper.sreality.api.EstateListing;
 import com.janprach.shopper.sreality.api.EstateListing.EstateListingEmbedded.EstateSummary;
 import com.janprach.shopper.sreality.entity.Estate;
 import com.janprach.shopper.sreality.entity.Image;
 import com.janprach.shopper.sreality.entity.RawResponse;
 import com.janprach.shopper.sreality.util.CoordinateUtils;
+import com.janprach.shopper.sreality.util.CoordinateUtils.Coordinates;
 
 @Slf4j
 @AllArgsConstructor(onConstructor = @__({ @javax.inject.Inject }))
@@ -135,7 +137,7 @@ public class SrealityFetcherService {
 	private Estate parseEstate(final long estateHashId, final String estateResponseString) throws IOException {
 		val estate = this.objectMapper.readValue(estateResponseString, com.janprach.shopper.sreality.api.Estate.class);
 		val items = estate.getItems().stream().collect(Collectors.toMap(i -> i.getName(), i -> i.getValue()));
-		val wgs84 = CoordinateUtils.seznamCzPpxPpy2CoordinateWGS84(estate.getMap().getPpx(), estate.getMap().getPpy());
+		val coordinates = this.getCoordinates(estate.getMap());
 
 		val areaBuild = this.parseInteger(items, "Plocha zastavěná");
 		val areaFloor = this.parseInteger(items, "Plocha podlahová");
@@ -152,8 +154,8 @@ public class SrealityFetcherService {
 		val estateUrl = this.srealityUrlTranslationService.getUrlString(estateHashId, estate.getSeo());
 		val zoom = estate.getMap().getZoom();
 		val estateEntity = new Estate(areaBuild, areaFloor, areaGarden, areaTotal, areaUsable, address, description,
-				wgs84.getLatitude(), wgs84.getLongitude(), metaDescription, price, estateSrealityId, state, title,
-				estateUrl, zoom, new ArrayList<Image>(), new ArrayList<RawResponse>());
+				coordinates.getLatitude(), coordinates.getLongitude(), metaDescription, price, estateSrealityId,
+				state, title, estateUrl, zoom, new ArrayList<Image>(), new ArrayList<RawResponse>());
 
 		val images = estate.getEmbedded().getImages().stream().map(image -> {
 			final String imageDescription = image.getLinks().getSelf().getTitle();
@@ -190,6 +192,16 @@ public class SrealityFetcherService {
 			return webTarget;
 		} else {
 			return webTarget.queryParam(name, value);
+		}
+	}
+
+	private Coordinates getCoordinates(final Geo geo) {
+		if (geo.getLat() != null && geo.getLon() != null) {
+			return new Coordinates(geo.getLat(), geo.getLon());
+		} else if (geo.getPpx() != null && geo.getPpy() != null) {
+			return CoordinateUtils.seznamCzPpxPpy2WGS84(geo.getPpx(), geo.getPpy());
+		} else {
+			return new Coordinates(0.0, 0.0);
 		}
 	}
 }

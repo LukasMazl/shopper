@@ -19,7 +19,7 @@ public class Estate {
 	@JsonProperty("is_topped_today")
 	private Boolean isToppedToday;
 	@JsonProperty("items")
-	private List<Item> items = new ArrayList<Item>();;
+	private List<Item> items = new ArrayList<Item>();
 	@JsonProperty("locality")
 	private NamedValue locality;
 	@JsonProperty("logged_in")
@@ -105,6 +105,10 @@ public class Estate {
 //		private List<Geometry> geometry = new ArrayList<Geometry>();
 //		private Geometry geometry;
 		private Object geometry;
+		@JsonProperty("lat")
+		private Double lat;
+		@JsonProperty("lon")
+		private Double lon;
 		@JsonProperty("ppx")
 		private Long ppx;
 		@JsonProperty("ppy")

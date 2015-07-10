@@ -10,8 +10,8 @@ public class CoordinateUtilsTest {
 	@Test
 	public void testUTM() {
 		val offsetTolerance = Offset.offset(0.001);
-		val wgs84 = CoordinateUtils.seznamCzPpxPpy2CoordinateWGS84(132962386, 135957343);
-		assertThat(wgs84.getLatitude()).isCloseTo(50.088567, offsetTolerance);
-		assertThat(wgs84.getLongitude()).isCloseTo(14.371980, offsetTolerance);
+		val coordinate = CoordinateUtils.seznamCzPpxPpy2WGS84(132962386, 135957343);
+		assertThat(coordinate.getLatitude()).isCloseTo(50.088567, offsetTolerance);
+		assertThat(coordinate.getLongitude()).isCloseTo(14.371980, offsetTolerance);
 	}
 }
