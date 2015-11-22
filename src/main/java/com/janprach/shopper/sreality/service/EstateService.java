@@ -36,4 +36,9 @@ public class EstateService {
 			log.error("Failed saving estate id {}.", estate.getSrealityId(), e);
 		}
 	}
+	
+	@Transactional
+	public void setStarsFor(final long srealityId, final int stars) {
+		this.estateRepository.setStarsFor(srealityId, stars);
+	}
 }

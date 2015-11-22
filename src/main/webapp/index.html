@@ -129,6 +129,12 @@ body {
 							<td><a class="fancyboxIframe fancybox.iframe" href="{{estate.url}}">sreality.cz</a> <br /> <a
 								class="fancyboxIframe fancybox.iframe" href="{{constructGoogleMapsUrl(estate.address)}}">maps.google.com</a></td>
 						</tr>
+						<tr>
+							<th>Stars:</th>
+							<td ng-controller="estateRatingController" ng-init="stars = estate.stars; srealityId = estate.srealityId;">
+								<rating ng-model="stars" max="maxStars"></rating>
+							</td>
+						</tr>
 					</table>
 				</div>
 				<div class="col-lg-8 col-md-7 col-xs-12">

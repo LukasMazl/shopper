@@ -76,3 +76,19 @@ estateListingModule.controller('estateListingController', function ($scope, $htt
     return 'https://www.google.com/maps/embed/v1/place?key=AIzaSyD3cmQ1Y2ZxnegHDg2Q2CmrOWqxn2ot6B4&q=' + encodeURIComponent(address);
   }
 });
+
+estateListingModule.controller('estateRatingController', function ($scope, $http) {
+  $scope.stars = 3;
+  $scope.maxStars = 3;
+  $scope.srealityId = undefined;
+
+  $scope.$watch('stars', function() {
+    console.log("Set stars for " + $scope.srealityId + " to " + $scope.stars);
+	var url = '/api/v1/vote';
+    var params = {
+      'srealityId': $scope.srealityId,
+      'stars': $scope.stars,
+    };
+    $http({ method: 'GET', url: url, params: params });
+  })
+});
