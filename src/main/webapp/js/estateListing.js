@@ -7,9 +7,9 @@ estateListingModule.controller('estateListingController', function ($scope, $htt
   $scope.totalEstates = 0;
   $scope.pageNumber = 1;
   $scope.pageSize = 20;
-  $scope.sort = 'updatedAt,desc';
+  $scope.sort = 'dateSort,desc';
 
-  $scope.maxNumberOfPageNumbers = 5;
+  $scope.maxNumberOfPageNumbers = 20;
   $http.defaults.headers.post["Content-Type"] = "application/json";
 
   function fetchEstates() {
@@ -29,7 +29,7 @@ estateListingModule.controller('estateListingController', function ($scope, $htt
   });
 
   $scope.timestampToLocaleDateString = function(timestamp) {
-    return new Date(timestamp).toLocaleDateString();
+    return new Date(timestamp).toLocaleFormat('%d.%m.%Y');
   }
 
   $scope.smallImageUrl = function(bigImageUrl) {
