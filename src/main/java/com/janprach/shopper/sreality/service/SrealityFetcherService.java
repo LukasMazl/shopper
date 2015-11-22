@@ -1,7 +1,7 @@
 package com.janprach.shopper.sreality.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -135,29 +135,30 @@ public class SrealityFetcherService {
 	}
 
 	private Estate parseEstate(final long estateHashId, final String estateResponseString) throws IOException {
-		val estate = this.objectMapper.readValue(estateResponseString, com.janprach.shopper.sreality.api.Estate.class);
-		val items = estate.getItems().stream().collect(Collectors.toMap(i -> i.getName(), i -> i.getValue()));
-		val coordinates = this.getCoordinates(estate.getMap());
+		val estateSreality = this.objectMapper.readValue(estateResponseString, com.janprach.shopper.sreality.api.Estate.class);
+		val items = estateSreality.getItems().stream().collect(Collectors.toMap(i -> i.getName(), i -> i.getValue()));
+		val coordinates = this.getCoordinates(estateSreality.getMap());
 
-		val areaBuild = this.parseInteger(items, "Plocha zastavěná");
-		val areaFloor = this.parseInteger(items, "Plocha podlahová");
-		val areaGarden = this.parseInteger(items, "Plocha zahrady");
-		val areaTotal = this.parseInteger(items, "Plocha pozemku");
-		val areaUsable = this.parseInteger(items, "Užitná plocha");
-		val address = estate.getLocality().getValue();
-		val description = estate.getText().getValue();
-		val metaDescription = estate.getMetaDescription();
-		val price = estate.getPriceCzk().getValueRaw();
-		val estateSrealityId = estateHashId;
-		val state = items.get("Stav objektu").toString();
-		val title = estate.getName().getValue();
-		val estateUrl = this.srealityUrlTranslationService.getUrlString(estateHashId, estate.getSeo());
-		val zoom = estate.getMap().getZoom();
-		val estateEntity = new Estate(areaBuild, areaFloor, areaGarden, areaTotal, areaUsable, address, description,
-				coordinates.getLatitude(), coordinates.getLongitude(), metaDescription, price, estateSrealityId,
-				state, title, estateUrl, zoom, new ArrayList<Image>(), new ArrayList<RawResponse>());
+		Estate estateEntity = new Estate();
+		estateEntity.setAreaBuild(this.parseInteger(items, "Plocha zastavěná"));
+		estateEntity.setAreaFloor(this.parseInteger(items, "Plocha podlahová"));
+		estateEntity.setAreaGarden(this.parseInteger(items, "Plocha zahrady"));
+		estateEntity.setAreaTotal(this.parseInteger(items, "Plocha pozemku"));
+		estateEntity.setAreaUsable(this.parseInteger(items, "Užitná plocha"));
+		estateEntity.setAddress(estateSreality.getLocality().getValue());
+		estateEntity.setDescription(estateSreality.getText().getValue());
+		estateEntity.setLatitude(coordinates.getLatitude());
+		estateEntity.setLongitude(coordinates.getLongitude());
+		estateEntity.setMetaDescription(estateSreality.getMetaDescription());
+		estateEntity.setPrice(estateSreality.getPriceCzk().getValueRaw());
+		estateEntity.setSrealityId(estateHashId);
+		estateEntity.setState(items.get("Stav objektu").toString());
+		estateEntity.setTitle(estateSreality.getName().getValue());
+		estateEntity.setUrl(this.srealityUrlTranslationService.getUrlString(estateHashId, estateSreality.getSeo()));
+		estateEntity.setZoom(estateSreality.getMap().getZoom());
+		estateEntity.setDateSort(new Date());
 
-		val images = estate.getEmbedded().getImages().stream().map(image -> {
+		val images = estateSreality.getEmbedded().getImages().stream().map(image -> {
 			final String imageDescription = image.getLinks().getSelf().getTitle();
 			final Long imageSrealityId = image.getId();
 			final String imageUrl = image.getLinks().getSelf().getHref();
