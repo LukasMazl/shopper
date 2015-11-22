@@ -11,7 +11,7 @@ public class RepositoryRestMvcConfig extends RepositoryRestMvcConfiguration {
 	@Override
 	public RepositoryRestConfiguration config() {
 		val config = super.config();
-		config.setBaseUri("/api/v1");
+		config.setBasePath("/api/v1");
 		return config;
 	}
 }
