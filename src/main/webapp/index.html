@@ -22,7 +22,6 @@
 
 <!-- angularjs -->
 <script type="text/javascript" src="webjars/angularjs/1.3.15/angular.min.js"></script>
-<script type="text/javascript" src="webjars/ngInfiniteScroll/1.1.2/ng-infinite-scroll.min.js"></script>
 
 <!-- angularjs + bootstrap -->
 <script src="webjars/angular-ui-bootstrap/0.12.1-1/ui-bootstrap-tpls.min.js"></script>
@@ -49,7 +48,8 @@ body {
 .estateDataTable th {
 	/* padding-left: 1em; */
 	padding-right: 1em;
-	text-align: right;
+	text-align: left;
+	vertical-align: top;
 	font-weight: normal;
 }
 
@@ -75,8 +75,6 @@ body {
 </head>
 <body>
 
-
-
 	<div class="container estates" ng-controller="estateListingController">
 		<div class="estate" ng-repeat="estate in estates">
 			<a href="{{estate.url}}"><h3>{{estate.metaDescription}}</h3></a>
@@ -85,7 +83,12 @@ body {
 					<table class="estateDataTable">
 						<tr>
 							<th>Datum:</th>
-							<td>{{timestampToLocaleDateString(estate.updatedAt)}}</td>
+							<td>{{timestampToLocaleDateString(estate.createdAt)}}
+							(změna {{timestampToLocaleDateString(estate.dateSort)}})</td>
+						</tr>
+						<tr>
+							<th>Cena:</th>
+							<td><B>{{numberWithSpaces(estate.price)}}</B></td>
 						</tr>
 						<tr>
 							<th>Adresa:</th>
@@ -100,7 +103,7 @@ body {
 							<td>{{estate.areaBuild}} m<sup>2</sup></td>
 						</tr>
 						<tr>
-							<th>Užitná plocha:</th>
+							<th>Plocha užitná:</th>
 							<td>{{estate.areaUsable}} m<sup>2</sup></td>
 						</tr>
 						<tr>
@@ -122,7 +125,11 @@ body {
 						</tr>
 					</table>
 				</div>
-				<div class="col-lg-8 col-md-7 col-xs-12">{{estate.description}}</div>
+				<div class="col-lg-8 col-md-7 col-xs-12">
+					{{estate.description}}
+					<br><br>
+					<div style="white-space: pre;">{{estate.history}}</div>
+				</div>
 			</div>
 			<div class="row">
 				<div class="col-lg-3 col-md-4 col-xs-6" ng-repeat="image in estate.images">
