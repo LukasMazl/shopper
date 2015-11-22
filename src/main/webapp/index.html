@@ -76,6 +76,12 @@ body {
 <body>
 
 	<div class="container estates" ng-controller="estateListingController">
+		<form>
+			<label>Adresa
+				<input type="text" name="searchText" ng-model="searchText" />
+				<button ng-click="searchSubmit();">Hledat</button>
+			</label>
+		</form>
 		<div class="estate" ng-repeat="estate in estates">
 			<a href="{{estate.url}}"><h3>{{estate.metaDescription}}</h3></a>
 			<div class="row">
@@ -140,7 +146,7 @@ body {
 			</div>
 			<div style="clear: both;"></div>
 		</div>
-		<pagination ng-model="pageNumber" total-items="totalEstates" max-size="maxNumberOfPageNumbers" boundary-links="true" />
+		<pagination ng-model="pageNumber" ng-change="pageChanged()" total-items="totalEstates" max-size="maxNumberOfPageNumbers" boundary-links="true" items-per-page="pageSize"/>
 	</div>
 
 

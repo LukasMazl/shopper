@@ -2,31 +2,63 @@
 
 var estateListingModule = angular.module('estateListingApp', ['ui.bootstrap']);
 
-estateListingModule.controller('estateListingController', function ($scope, $http) {
+estateListingModule.controller('estateListingController', function ($scope, $http, $location) {
+  $scope.initialLoad = true;
   $scope.estates = [];
   $scope.totalEstates = 0;
-  $scope.pageNumber = 1;
+  $scope.pageNumber = 123456789;
+//  $scope.pageNumber = parseInt($location.search()['pageNumber']) || 1;
   $scope.pageSize = 20;
   $scope.sort = 'dateSort,desc';
 
   $scope.maxNumberOfPageNumbers = 20;
   $http.defaults.headers.post["Content-Type"] = "application/json";
-
+  
   function fetchEstates() {
-    var requestUri = '/api/v1/estates?page=' + ($scope.pageNumber - 1) + '&size=' + $scope.pageSize + '&sort=' + $scope.sort;
-    $http.get(requestUri).success(function(data) {
+	var url = '/api/v1/estates/search/findAllByActiveAndVisibleAndAddressLike';
+    var params = {
+      'active': true,
+      'visible': true,
+      'address': $scope.searchText || "%",
+      'page': $scope.pageNumber - 1,
+      'size': $scope.pageSize,
+      'sort': $scope.sort,
+    };
+    console.log("Fetch estates: url = " + url + " , params = " + JSON.stringify(params));
+    $http({ method: 'GET', url: url, params: params }).success(function(data) {
       if (data._embedded != undefined) {
         $scope.estates = data._embedded.estates;
       }
       $scope.totalEstates = data.page.totalElements;
+      $location.search({'pageNumber': $scope.pageNumber});
     }).error(function(error) {
       $scope.fetchEstatesError = error;
     });
   };
 
-  $scope.$watch('pageNumber + pageSize', function() {
-      fetchEstates();
-  });
+  $scope.searchSubmit = function() {
+    console.log("searchSubmit " + $scope.searchText);
+    fetchEstates();
+  }
+
+  $scope.pageChanged = function() {
+    if ($scope.initialLoad) {
+      $scope.initialLoad = false;
+      $scope.pageNumber = parseInt($location.search()['pageNumber']) || 1;
+    }
+    fetchEstates();
+  }
+
+//  $scope.$on('$locationChangeStart', function(next, current) { 
+//console.log("location change");
+  // TODO: it would be nice to uncomment but avoid calling fetch estates twice
+//fetchEstates();
+//  })
+
+//  $scope.$watch('pageNumber + pageSize', function() {
+//console.log("watch");
+//    fetchEstates();
+//  })
 
   $scope.timestampToLocaleDateString = function(timestamp) {
     return new Date(timestamp).toLocaleFormat('%d.%m.%Y');
