@@ -1,6 +1,7 @@
 package com.janprach.shopper.sreality.service;
 
 import java.util.Date;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,11 @@ public class EstateService {
 	@Transactional(readOnly = true)
 	public Estate findBySrealityId(final long srealityId) {
 		return this.estateRepository.findBySrealityId(srealityId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<Estate> findAllActive() {
+		return this.estateRepository.findAllByActive(true);
 	}
 
 	@Transactional

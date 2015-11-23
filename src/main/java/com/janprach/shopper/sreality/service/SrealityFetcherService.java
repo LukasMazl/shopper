@@ -2,7 +2,9 @@ package com.janprach.shopper.sreality.service;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -51,13 +53,28 @@ public class SrealityFetcherService {
 	@Scheduled(initialDelayString = "${com.janprach.shopper.sreality.initialDelay}", fixedDelayString = "${com.janprach.shopper.sreality.fixedDelay}")
 	public void fetchAndStoreLatestRealites() {
 		int countSaved = 0;
+		HashSet<Long> srealityIds = new HashSet<>();
 		Iterator<EstateSummary> iterator = fetchEstateSummaries().iterator();
 		while (iterator.hasNext()) {
 			EstateSummary estateSummary = iterator.next();
+			srealityIds.add(estateSummary.getHashId());
 			if (fetchEstateSummary(estateSummary))
 				countSaved++;
 		}
 		log.info("Saved " + countSaved + " estates");
+
+		int countDeleted = 0;
+		List<Estate> estates = this.estateService.findAllActive();
+		for (Estate estate : estates) {
+			if (!srealityIds.contains(estate.getSrealityId())) {
+				estate.setActive(false);
+				EstateService.addHistory(estate, "Smazano");
+				estateService.saveEstate(estate);
+				countDeleted++;
+				log.info(estate.getHistory());
+			}
+		}
+		log.info("Deleted " + countDeleted + " estates");
 	}
 
 	private boolean fetchEstateSummary(EstateSummary estateSummary) {
