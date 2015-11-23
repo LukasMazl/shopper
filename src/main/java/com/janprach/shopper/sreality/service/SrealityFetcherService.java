@@ -2,6 +2,7 @@ package com.janprach.shopper.sreality.service;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -38,7 +39,6 @@ import com.janprach.shopper.sreality.util.CoordinateUtils.Coordinates;
 @AllArgsConstructor(onConstructor = @__({ @javax.inject.Inject }))
 @Component
 public class SrealityFetcherService {
-	private static final int CONSECUTIVE_UNCHANGED_BEFORE_BREAK = 10;
 	private static final int ESTATE_SUMMARIES_PER_PAGE = 20;
 
 	private final Client client;
@@ -50,41 +50,86 @@ public class SrealityFetcherService {
 	// @Scheduled(cron = "${com.janprach.shopper.sreality.cron}")
 	@Scheduled(initialDelayString = "${com.janprach.shopper.sreality.initialDelay}", fixedDelayString = "${com.janprach.shopper.sreality.fixedDelay}")
 	public void fetchAndStoreLatestRealites() {
-		val iterator = this.fetchEstates().iterator();
-		int consecutiveSameEstateCounter = 0;
-		while (iterator.hasNext() && consecutiveSameEstateCounter < CONSECUTIVE_UNCHANGED_BEFORE_BREAK) {
-			val estate = iterator.next();
-			val previousEstate = this.estateService.findBySrealityId(estate.getSrealityId());
-			if (previousEstate == null) {
-				this.estateService.saveEstate(estate);
-				consecutiveSameEstateCounter = 0;
-			} else {
-				if (estateEquals(previousEstate, estate)) {
-					log.info("Unchanged entity {}.", estate.getSrealityId());
-					consecutiveSameEstateCounter++;
-				} else { // TODO: what will happen on update with old/new images and response?
-					estate.setEntityBaseFieldsForUpdate(previousEstate);
-					this.estateService.saveEstate(estate);
-					consecutiveSameEstateCounter = 0;
-				}
-			}
+		int countSaved = 0;
+		Iterator<EstateSummary> iterator = fetchEstateSummaries().iterator();
+		while (iterator.hasNext()) {
+			EstateSummary estateSummary = iterator.next();
+			if (fetchEstateSummary(estateSummary))
+				countSaved++;
+		}
+		log.info("Saved " + countSaved + " estates");
+	}
+
+	private boolean fetchEstateSummary(EstateSummary estateSummary) {
+		Estate estateOld = this.estateService.findBySrealityId(estateSummary.getHashId());
+		if (estateOld == null)
+			return fetchEstateNew(estateSummary);
+		else
+			return fetchEstateExisting(estateSummary, estateOld);
+	}
+
+	private boolean fetchEstateNew(EstateSummary estateSummary) {
+		Estate estateNew = fetchEstate(estateSummary);
+		if (estateNew == null)
+			return false;
+		
+		// novy
+		estateService.saveEstate(estateNew);
+		return true;
+	}
+
+	private boolean fetchEstateExisting(EstateSummary estateSummary, Estate estateOld) {
+		if (estateEquals(estateOld, estateSummary)) {
+			// beze zmeny
+			return false;
+		} else {
+			// zmeneny
+			// TODO: what will happen on update with old/new images and response?
+			Estate estateNew = fetchEstate(estateSummary);
+			if (estateNew == null)
+				return false;
+			
+			EstateService.addHistory(estateOld, "Cena: " + estateOld.getPrice() + " -> " + estateNew.getPrice());
+			estateOld.setActive(true);
+			estateOld.setAreaBuild(estateNew.getAreaBuild());
+			estateOld.setAreaFloor(estateNew.getAreaFloor());
+			estateOld.setAreaGarden(estateNew.getAreaGarden());
+			estateOld.setAreaTotal(estateNew.getAreaTotal());
+			estateOld.setAreaUsable(estateNew.getAreaUsable());
+			estateOld.setAddress(estateNew.getAddress());
+			estateOld.setDescription(estateNew.getDescription());
+			estateOld.setLatitude(estateNew.getLatitude());
+			estateOld.setLongitude(estateNew.getLongitude());
+			estateOld.setMetaDescription(estateNew.getMetaDescription());
+			estateOld.setPrice(estateNew.getPrice());
+			estateOld.setSrealityId(estateNew.getSrealityId());
+			estateOld.setState(estateNew.getState());
+			estateOld.setTitle(estateNew.getTitle());
+			estateOld.setUrl(estateNew.getUrl());
+			estateOld.setZoom(estateNew.getZoom());
+			estateService.saveEstate(estateOld);
+			log.info(estateOld.getHistory());
+			return true;
 		}
 	}
 
-	Stream<Estate> fetchEstates() {
-		val estates = this.fetchEstateSummaries().map(estateSummary -> {
-			final Long estateHashId = estateSummary.getHashId();
-			try {
-				final Response estateResponse = this.fetchEstate(estateHashId);
-				final String estateResponseString = estateResponse.readEntity(String.class);
-				final Estate estate = this.parseEstate(estateHashId, estateResponseString);
-				return Optional.of(estate);
-			} catch (final Exception e) {
-				log.error("Failed fetching or parsing estate id {}.", estateHashId, e);
-				return Optional.<Estate> empty();
-			}
-		});
-		return StreamUtils.takeWhile(estates, e -> e.isPresent()).map(e -> e.get());
+	private boolean estateEquals(final Estate estateOld, final EstateSummary estateSummary) {
+		return estateOld.getActive()
+				&& Objects.equal(estateOld.getSrealityId(), estateSummary.getHashId())
+				&& Objects.equal(estateOld.getPrice(), estateSummary.getPrice());
+	}
+
+	private Estate fetchEstate(EstateSummary estateSummary) {
+		val estateHashId = estateSummary.getHashId();
+		try {
+			val estateResponse = this.fetchEstate(estateHashId);
+			val estateResponseString = estateResponse.readEntity(String.class);
+			val estate = this.parseEstate(estateHashId, estateResponseString);
+			return estate;
+		} catch (final Exception e) {
+			log.error("Failed fetching or parsing estate id {}.", estateHashId, e);
+			return null;
+		}
 	}
 
 	Stream<EstateSummary> fetchEstateSummaries() {
@@ -175,17 +220,6 @@ public class SrealityFetcherService {
 	private Integer parseInteger(final Map<String, Object> map, final String key) {
 		val value = map.get(key);
 		return value == null ? null : Integer.parseInt(value.toString());
-	}
-
-	private boolean estateEquals(final Estate a, final Estate b) {
-		return Objects.equal(a.getAddress(), b.getAddress())
-				&& Objects.equal(a.getDescription(), b.getDescription())
-				&& Objects.equal(a.getLatitude(), b.getLatitude())
-				&& Objects.equal(a.getLongitude(), b.getLongitude())
-				&& Objects.equal(a.getPrice(), b.getPrice())
-				&& Objects.equal(a.getSrealityId(), b.getSrealityId())
-				&& Objects.equal(a.getState(), b.getState())
-				&& Objects.equal(a.getTitle(), b.getTitle());
 	}
 
 	private WebTarget addParam(final WebTarget webTarget, final String name, final String value) {

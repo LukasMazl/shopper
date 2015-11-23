@@ -1,8 +1,12 @@
 package com.janprach.shopper.sreality.service;
 
+import java.util.Date;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateFormatUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +47,15 @@ public class EstateService {
 		}
 	}
 	
+	public static void addHistory(final Estate estate, final String message) {
+		String log = DateFormatUtils.format(new Date(), "dd.MM.yyyy") + " " + message;
+		
+		if (StringUtils.isEmpty(estate.getHistory()))
+			estate.setHistory(log);
+		else
+			estate.setHistory(log + "\n" + estate.getHistory());
+	}
+
 	@Transactional
 	public void setStarsFor(final long srealityId, final int stars) {
 		this.estateRepository.setStarsFor(srealityId, stars);
