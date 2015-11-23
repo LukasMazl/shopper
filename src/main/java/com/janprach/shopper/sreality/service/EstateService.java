@@ -27,11 +27,17 @@ public class EstateService {
 
 	@Transactional
 	void saveEstate(final Estate estate) {
-		log.info("Saving estate id {} ...", estate.getSrealityId());
+		long id = estate.getId();
+		if (id == 0)
+			log.info("Insert" + estate.getAddress() + ", " + estate.getUrl());
+		else
+			log.info("Update" + estate.getAddress() + ", " + estate.getUrl());
 		try {
 			this.estateRepository.save(estate);
-			this.imageRepository.save(estate.getImages());
-			this.rawResponseRepository.save(estate.getRawResponses());
+			if (id == 0) {
+				this.imageRepository.save(estate.getImages());
+				this.rawResponseRepository.save(estate.getRawResponses());
+			}
 		} catch (final Exception e) {
 			log.error("Failed saving estate id {}.", estate.getSrealityId(), e);
 		}
