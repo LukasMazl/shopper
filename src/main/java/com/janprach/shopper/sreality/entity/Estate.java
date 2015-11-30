@@ -11,13 +11,18 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(indexes = { @Index(name = "ESTATE_BY_TITLE", columnList = "TITLE") }, uniqueConstraints = { @UniqueConstraint(name = "ESTATE_BY_SREALITY_ID", columnNames = "SREALITYID") })
+@Table(indexes = { @Index(name = "ESTATE_BY_TITLE", columnList = "TITLE") },
+		uniqueConstraints = { @UniqueConstraint(name = "ESTATE_BY_SREALITY_ID", columnNames = "SREALITYID") })
 public class Estate extends EntityBase {
 	@Column
 	private Integer areaBuild;

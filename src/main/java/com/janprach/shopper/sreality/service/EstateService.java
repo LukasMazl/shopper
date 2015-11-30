@@ -1,13 +1,10 @@
 package com.janprach.shopper.sreality.service;
 
-import java.util.Date;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateFormatUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,29 +34,21 @@ public class EstateService {
 
 	@Transactional
 	void saveEstate(final Estate estate) {
-		long id = estate.getId();
-		if (id == 0)
+		final boolean isNew = estate.getId() == 0;
+		if (isNew) {
 			log.info("Insert" + estate.getAddress() + ", " + estate.getUrl());
-		else
+		} else {
 			log.info("Update" + estate.getAddress() + ", " + estate.getUrl());
+		}
 		try {
 			this.estateRepository.save(estate);
-			if (id == 0) {
+			if (isNew) {
 				this.imageRepository.save(estate.getImages());
 				this.rawResponseRepository.save(estate.getRawResponses());
 			}
 		} catch (final Exception e) {
 			log.error("Failed saving estate id {}.", estate.getSrealityId(), e);
 		}
-	}
-	
-	public static void addHistory(final Estate estate, final String message) {
-		String log = DateFormatUtils.format(new Date(), "dd.MM.yyyy") + " " + message;
-		
-		if (StringUtils.isEmpty(estate.getHistory()))
-			estate.setHistory(log);
-		else
-			estate.setHistory(log + "\n" + estate.getHistory());
 	}
 
 	@Transactional

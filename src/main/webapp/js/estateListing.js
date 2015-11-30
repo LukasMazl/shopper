@@ -6,14 +6,14 @@ estateListingModule.controller('estateListingController', function ($scope, $htt
   $scope.initialLoad = true;
   $scope.estates = [];
   $scope.totalEstates = 0;
-  $scope.pageNumber = 123456789;
+  $scope.pageNumber = 0;
 //  $scope.pageNumber = parseInt($location.search()['pageNumber']) || 1;
   $scope.pageSize = 20;
   $scope.sort = 'dateSort,desc';
 
   $scope.maxNumberOfPageNumbers = 20;
   $http.defaults.headers.post["Content-Type"] = "application/json";
-  
+
   function fetchEstates() {
 	var url = '/api/v1/estates/search/findAllByActiveAndVisibleAndAddressLike';
     var params = {
@@ -49,17 +49,6 @@ estateListingModule.controller('estateListingController', function ($scope, $htt
     fetchEstates();
   }
 
-//  $scope.$on('$locationChangeStart', function(next, current) { 
-//console.log("location change");
-  // TODO: it would be nice to uncomment but avoid calling fetch estates twice
-//fetchEstates();
-//  })
-
-//  $scope.$watch('pageNumber + pageSize', function() {
-//console.log("watch");
-//    fetchEstates();
-//  })
-
   $scope.timestampToLocaleDateString = function(timestamp) {
     return new Date(timestamp).toLocaleFormat('%d.%m.%Y');
   }
@@ -78,7 +67,7 @@ estateListingModule.controller('estateListingController', function ($scope, $htt
 });
 
 estateListingModule.controller('estateRatingController', function ($scope, $http) {
-  $scope.stars = 3;
+  $scope.stars = 0;
   $scope.maxStars = 3;
   $scope.srealityId = undefined;
 

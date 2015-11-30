@@ -36,6 +36,7 @@ import com.janprach.shopper.sreality.entity.Image;
 import com.janprach.shopper.sreality.entity.RawResponse;
 import com.janprach.shopper.sreality.util.CoordinateUtils;
 import com.janprach.shopper.sreality.util.CoordinateUtils.Coordinates;
+import com.janprach.shopper.sreality.util.EstateUtils;
 
 @Slf4j
 @AllArgsConstructor(onConstructor = @__({ @javax.inject.Inject }))
@@ -58,8 +59,9 @@ public class SrealityFetcherService {
 		while (iterator.hasNext()) {
 			EstateSummary estateSummary = iterator.next();
 			srealityIds.add(estateSummary.getHashId());
-			if (fetchEstateSummary(estateSummary))
+			if (fetchEstateSummary(estateSummary)) {
 				countSaved++;
+			}
 		}
 		log.info("Saved " + countSaved + " estates");
 
@@ -68,7 +70,7 @@ public class SrealityFetcherService {
 		for (Estate estate : estates) {
 			if (!srealityIds.contains(estate.getSrealityId())) {
 				estate.setActive(false);
-				EstateService.addHistory(estate, "Smazano");
+				EstateUtils.addHistoryRecord(estate, "Smazano");
 				estateService.saveEstate(estate);
 				countDeleted++;
 				log.info(estate.getHistory());
@@ -79,17 +81,19 @@ public class SrealityFetcherService {
 
 	private boolean fetchEstateSummary(EstateSummary estateSummary) {
 		Estate estateOld = this.estateService.findBySrealityId(estateSummary.getHashId());
-		if (estateOld == null)
+		if (estateOld == null) {
 			return fetchEstateNew(estateSummary);
-		else
+		} else {
 			return fetchEstateExisting(estateSummary, estateOld);
+		}
 	}
 
 	private boolean fetchEstateNew(EstateSummary estateSummary) {
 		Estate estateNew = fetchEstate(estateSummary);
-		if (estateNew == null)
+		if (estateNew == null) {
 			return false;
-		
+		}
+
 		// novy
 		estateService.saveEstate(estateNew);
 		return true;
@@ -103,10 +107,11 @@ public class SrealityFetcherService {
 			// zmeneny
 			// TODO: what will happen on update with old/new images and response?
 			Estate estateNew = fetchEstate(estateSummary);
-			if (estateNew == null)
+			if (estateNew == null) {
 				return false;
-			
-			EstateService.addHistory(estateOld, "Cena: " + estateOld.getPrice() + " -> " + estateNew.getPrice());
+			}
+
+			EstateUtils.addHistoryRecord(estateOld, "Cena: " + estateOld.getPrice() + " -> " + estateNew.getPrice());
 			estateOld.setActive(true);
 			estateOld.setAreaBuild(estateNew.getAreaBuild());
 			estateOld.setAreaFloor(estateNew.getAreaFloor());
