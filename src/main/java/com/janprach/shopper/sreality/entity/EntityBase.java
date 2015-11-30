@@ -37,11 +37,4 @@ public class EntityBase {
 	void updateUpdatedAt() {
 		this.updatedAt = new Date();
 	}
-
-	public void setEntityBaseFieldsForUpdate(final EntityBase that) {
-		this.setId(that.getId());
-		this.setCreatedAt(that.getCreatedAt());
-		this.setUpdatedAt(that.getUpdatedAt());
-		this.setVersion(that.getVersion());
-	}
 }

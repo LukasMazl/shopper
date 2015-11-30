@@ -1,7 +1,10 @@
 package com.janprach.shopper.sreality.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -38,7 +41,6 @@ import com.janprach.shopper.sreality.util.CoordinateUtils.Coordinates;
 @AllArgsConstructor(onConstructor = @__({ @javax.inject.Inject }))
 @Component
 public class SrealityFetcherService {
-	private static final int CONSECUTIVE_UNCHANGED_BEFORE_BREAK = 10;
 	private static final int ESTATE_SUMMARIES_PER_PAGE = 20;
 
 	private final Client client;
@@ -50,41 +52,101 @@ public class SrealityFetcherService {
 	// @Scheduled(cron = "${com.janprach.shopper.sreality.cron}")
 	@Scheduled(initialDelayString = "${com.janprach.shopper.sreality.initialDelay}", fixedDelayString = "${com.janprach.shopper.sreality.fixedDelay}")
 	public void fetchAndStoreLatestRealites() {
-		val iterator = this.fetchEstates().iterator();
-		int consecutiveSameEstateCounter = 0;
-		while (iterator.hasNext() && consecutiveSameEstateCounter < CONSECUTIVE_UNCHANGED_BEFORE_BREAK) {
-			val estate = iterator.next();
-			val previousEstate = this.estateService.findBySrealityId(estate.getSrealityId());
-			if (previousEstate == null) {
-				this.estateService.saveEstate(estate);
-				consecutiveSameEstateCounter = 0;
-			} else {
-				if (estateEquals(previousEstate, estate)) {
-					log.info("Unchanged entity {}.", estate.getSrealityId());
-					consecutiveSameEstateCounter++;
-				} else { // TODO: what will happen on update with old/new images and response?
-					estate.setEntityBaseFieldsForUpdate(previousEstate);
-					this.estateService.saveEstate(estate);
-					consecutiveSameEstateCounter = 0;
-				}
+		int countSaved = 0;
+		HashSet<Long> srealityIds = new HashSet<>();
+		Iterator<EstateSummary> iterator = fetchEstateSummaries().iterator();
+		while (iterator.hasNext()) {
+			EstateSummary estateSummary = iterator.next();
+			srealityIds.add(estateSummary.getHashId());
+			if (fetchEstateSummary(estateSummary))
+				countSaved++;
+		}
+		log.info("Saved " + countSaved + " estates");
+
+		int countDeleted = 0;
+		List<Estate> estates = this.estateService.findAllActive();
+		for (Estate estate : estates) {
+			if (!srealityIds.contains(estate.getSrealityId())) {
+				estate.setActive(false);
+				EstateService.addHistory(estate, "Smazano");
+				estateService.saveEstate(estate);
+				countDeleted++;
+				log.info(estate.getHistory());
 			}
+		}
+		log.info("Deleted " + countDeleted + " estates");
+	}
+
+	private boolean fetchEstateSummary(EstateSummary estateSummary) {
+		Estate estateOld = this.estateService.findBySrealityId(estateSummary.getHashId());
+		if (estateOld == null)
+			return fetchEstateNew(estateSummary);
+		else
+			return fetchEstateExisting(estateSummary, estateOld);
+	}
+
+	private boolean fetchEstateNew(EstateSummary estateSummary) {
+		Estate estateNew = fetchEstate(estateSummary);
+		if (estateNew == null)
+			return false;
+		
+		// novy
+		estateService.saveEstate(estateNew);
+		return true;
+	}
+
+	private boolean fetchEstateExisting(EstateSummary estateSummary, Estate estateOld) {
+		if (estateEquals(estateOld, estateSummary)) {
+			// beze zmeny
+			return false;
+		} else {
+			// zmeneny
+			// TODO: what will happen on update with old/new images and response?
+			Estate estateNew = fetchEstate(estateSummary);
+			if (estateNew == null)
+				return false;
+			
+			EstateService.addHistory(estateOld, "Cena: " + estateOld.getPrice() + " -> " + estateNew.getPrice());
+			estateOld.setActive(true);
+			estateOld.setAreaBuild(estateNew.getAreaBuild());
+			estateOld.setAreaFloor(estateNew.getAreaFloor());
+			estateOld.setAreaGarden(estateNew.getAreaGarden());
+			estateOld.setAreaTotal(estateNew.getAreaTotal());
+			estateOld.setAreaUsable(estateNew.getAreaUsable());
+			estateOld.setAddress(estateNew.getAddress());
+			estateOld.setDescription(estateNew.getDescription());
+			estateOld.setLatitude(estateNew.getLatitude());
+			estateOld.setLongitude(estateNew.getLongitude());
+			estateOld.setMetaDescription(estateNew.getMetaDescription());
+			estateOld.setPrice(estateNew.getPrice());
+			estateOld.setSrealityId(estateNew.getSrealityId());
+			estateOld.setState(estateNew.getState());
+			estateOld.setTitle(estateNew.getTitle());
+			estateOld.setUrl(estateNew.getUrl());
+			estateOld.setZoom(estateNew.getZoom());
+			estateService.saveEstate(estateOld);
+			log.info(estateOld.getHistory());
+			return true;
 		}
 	}
 
-	Stream<Estate> fetchEstates() {
-		val estates = this.fetchEstateSummaries().map(estateSummary -> {
-			final Long estateHashId = estateSummary.getHashId();
-			try {
-				final Response estateResponse = this.fetchEstate(estateHashId);
-				final String estateResponseString = estateResponse.readEntity(String.class);
-				final Estate estate = this.parseEstate(estateHashId, estateResponseString);
-				return Optional.of(estate);
-			} catch (final Exception e) {
-				log.error("Failed fetching or parsing estate id {}.", estateHashId, e);
-				return Optional.<Estate> empty();
-			}
-		});
-		return StreamUtils.takeWhile(estates, e -> e.isPresent()).map(e -> e.get());
+	private boolean estateEquals(final Estate estateOld, final EstateSummary estateSummary) {
+		return estateOld.getActive()
+				&& Objects.equal(estateOld.getSrealityId(), estateSummary.getHashId())
+				&& Objects.equal(estateOld.getPrice(), estateSummary.getPrice());
+	}
+
+	private Estate fetchEstate(EstateSummary estateSummary) {
+		val estateHashId = estateSummary.getHashId();
+		try {
+			val estateResponse = this.fetchEstate(estateHashId);
+			val estateResponseString = estateResponse.readEntity(String.class);
+			val estate = this.parseEstate(estateHashId, estateResponseString);
+			return estate;
+		} catch (final Exception e) {
+			log.error("Failed fetching or parsing estate id {}.", estateHashId, e);
+			return null;
+		}
 	}
 
 	Stream<EstateSummary> fetchEstateSummaries() {
@@ -135,29 +197,30 @@ public class SrealityFetcherService {
 	}
 
 	private Estate parseEstate(final long estateHashId, final String estateResponseString) throws IOException {
-		val estate = this.objectMapper.readValue(estateResponseString, com.janprach.shopper.sreality.api.Estate.class);
-		val items = estate.getItems().stream().collect(Collectors.toMap(i -> i.getName(), i -> i.getValue()));
-		val coordinates = this.getCoordinates(estate.getMap());
+		val estateSreality = this.objectMapper.readValue(estateResponseString, com.janprach.shopper.sreality.api.Estate.class);
+		val items = estateSreality.getItems().stream().collect(Collectors.toMap(i -> i.getName(), i -> i.getValue()));
+		val coordinates = this.getCoordinates(estateSreality.getMap());
 
-		val areaBuild = this.parseInteger(items, "Plocha zastavěná");
-		val areaFloor = this.parseInteger(items, "Plocha podlahová");
-		val areaGarden = this.parseInteger(items, "Plocha zahrady");
-		val areaTotal = this.parseInteger(items, "Plocha pozemku");
-		val areaUsable = this.parseInteger(items, "Užitná plocha");
-		val address = estate.getLocality().getValue();
-		val description = estate.getText().getValue();
-		val metaDescription = estate.getMetaDescription();
-		val price = estate.getPriceCzk().getValueRaw();
-		val estateSrealityId = estateHashId;
-		val state = items.get("Stav objektu").toString();
-		val title = estate.getName().getValue();
-		val estateUrl = this.srealityUrlTranslationService.getUrlString(estateHashId, estate.getSeo());
-		val zoom = estate.getMap().getZoom();
-		val estateEntity = new Estate(areaBuild, areaFloor, areaGarden, areaTotal, areaUsable, address, description,
-				coordinates.getLatitude(), coordinates.getLongitude(), metaDescription, price, estateSrealityId,
-				state, title, estateUrl, zoom, new ArrayList<Image>(), new ArrayList<RawResponse>());
+		Estate estateEntity = new Estate();
+		estateEntity.setAreaBuild(this.parseInteger(items, "Plocha zastavěná"));
+		estateEntity.setAreaFloor(this.parseInteger(items, "Plocha podlahová"));
+		estateEntity.setAreaGarden(this.parseInteger(items, "Plocha zahrady"));
+		estateEntity.setAreaTotal(this.parseInteger(items, "Plocha pozemku"));
+		estateEntity.setAreaUsable(this.parseInteger(items, "Užitná plocha"));
+		estateEntity.setAddress(estateSreality.getLocality().getValue());
+		estateEntity.setDescription(estateSreality.getText().getValue());
+		estateEntity.setLatitude(coordinates.getLatitude());
+		estateEntity.setLongitude(coordinates.getLongitude());
+		estateEntity.setMetaDescription(estateSreality.getMetaDescription());
+		estateEntity.setPrice(estateSreality.getPriceCzk().getValueRaw());
+		estateEntity.setSrealityId(estateHashId);
+		estateEntity.setState(items.get("Stav objektu").toString());
+		estateEntity.setTitle(estateSreality.getName().getValue());
+		estateEntity.setUrl(this.srealityUrlTranslationService.getUrlString(estateHashId, estateSreality.getSeo()));
+		estateEntity.setZoom(estateSreality.getMap().getZoom());
+		estateEntity.setDateSort(new Date());
 
-		val images = estate.getEmbedded().getImages().stream().map(image -> {
+		val images = estateSreality.getEmbedded().getImages().stream().map(image -> {
 			final String imageDescription = image.getLinks().getSelf().getTitle();
 			final Long imageSrealityId = image.getId();
 			final String imageUrl = image.getLinks().getSelf().getHref();
@@ -174,17 +237,6 @@ public class SrealityFetcherService {
 	private Integer parseInteger(final Map<String, Object> map, final String key) {
 		val value = map.get(key);
 		return value == null ? null : Integer.parseInt(value.toString());
-	}
-
-	private boolean estateEquals(final Estate a, final Estate b) {
-		return Objects.equal(a.getAddress(), b.getAddress())
-				&& Objects.equal(a.getDescription(), b.getDescription())
-				&& Objects.equal(a.getLatitude(), b.getLatitude())
-				&& Objects.equal(a.getLongitude(), b.getLongitude())
-				&& Objects.equal(a.getPrice(), b.getPrice())
-				&& Objects.equal(a.getSrealityId(), b.getSrealityId())
-				&& Objects.equal(a.getState(), b.getState())
-				&& Objects.equal(a.getTitle(), b.getTitle());
 	}
 
 	private WebTarget addParam(final WebTarget webTarget, final String name, final String value) {

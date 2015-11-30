@@ -1,6 +1,7 @@
 package com.janprach.shopper.sreality.entity;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -10,14 +11,10 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(indexes = { @Index(name = "ESTATE_BY_TITLE", columnList = "TITLE") }, uniqueConstraints = { @UniqueConstraint(name = "ESTATE_BY_SREALITY_ID", columnNames = "SREALITYID") })
@@ -69,6 +66,21 @@ public class Estate extends EntityBase {
 
 	@Column
 	private Integer zoom;
+
+	@Column(name = "date_sort")
+	protected Date dateSort;
+
+	@Column
+	private Boolean active = true;
+
+	@Column
+	private Boolean visible = true;
+
+	@Column
+	private Integer stars = 0;
+
+	@Column(length = 64 * 1024)
+	private String history = "";
 
 	@OneToMany(mappedBy = "estate")
 	private List<Image> images = new ArrayList<Image>();
