@@ -172,7 +172,7 @@ public class SrealityFetcherService {
 		val webTarget = webTargetModifier.apply(estatesWebTarget);
 		log.debug("Fetching {}", webTarget.getUri());
 		return webTarget.request(MediaType.APPLICATION_JSON_TYPE)
-				.header("User-Agent", this.getClass().getSimpleName() + " v0.0.1").get();
+				.header("User-Agent", this.srealityFetcherConfig.getUserAgentString()).get();
 	}
 
 	private Estate parseEstate(final long estateHashId, final String estateResponseString) throws IOException {

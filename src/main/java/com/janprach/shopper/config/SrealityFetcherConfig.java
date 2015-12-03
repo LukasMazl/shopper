@@ -19,4 +19,6 @@ public class SrealityFetcherConfig {
 	private String localityRegion; // 10 = praha
 	private String localityDistrict; // 5006 = praha-6
 	private String priceRange; // 0|15000000 = od 0 do 15000000
+
+	private String userAgentString;
 }
