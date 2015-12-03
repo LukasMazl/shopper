@@ -20,5 +20,6 @@ public class SrealityFetcherConfig {
 	private int estateSummariesPerPage;
 	private int maxEstateSummaryPageNumber;
 
+	private String imagesDirectory;
 	private String userAgentString;
 }
