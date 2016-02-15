@@ -45,6 +45,15 @@
 body {
 }
 
+.estateSearch {
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
+.estate {
+	margin-bottom: 4em;
+}
+
 .estateDataTable th {
 	/* padding-left: 1em; */
 	padding-right: 1em;
@@ -68,6 +77,10 @@ body {
 	/* padding: 0.5em; */
 	/* vertical-align: middle; */
 }
+
+.glyphicon-star {
+	color: orange;
+}
 </style>
 
 
@@ -78,11 +91,10 @@ body {
 
 
 	<div class="container estates" ng-controller="estateListingController">
-		<form>
-			<label>Adresa
-				<input type="text" name="searchText" ng-model="searchText" />
-				<button ng-click="searchSubmit();">Hledat</button>
-			</label>
+		<form class="estateSearch">
+			<label>Adresa</label>
+			<input type="text" name="searchText" ng-model="searchText" />
+			<button ng-click="searchSubmit();">Hledat</button>
 		</form>
 		<div class="estate" ng-repeat="estate in estates">
 			<a href="{{estate.url}}"><h3>{{estate.metaDescription}}</h3></a>
@@ -100,7 +112,7 @@ body {
 						</tr>
 						<tr>
 							<th>Adresa:</th>
-							<td>{{estate.address}}</td>
+							<td><B>{{estate.address}}</B></td>
 						</tr>
 						<tr>
 							<th>Stav objektu:</th>
@@ -112,15 +124,15 @@ body {
 						</tr>
 						<tr>
 							<th>Plocha užitná:</th>
-							<td>{{estate.areaUsable}} m<sup>2</sup></td>
+							<td><B>{{estate.areaUsable}} m<sup>2</sup></B></td>
 						</tr>
 						<tr>
 							<th>Plocha podlahová:</th>
-							<td>{{estate.floorUsable}} m<sup>2</sup></td>
+							<td>{{estate.areaFloor}} m<sup>2</sup></td>
 						</tr>
 						<tr>
 							<th>Plocha pozemku:</th>
-							<td>{{estate.areaTotal}} m<sup>2</sup></td>
+							<td><B>{{estate.areaTotal}} m<sup>2</sup></B></td>
 						</tr>
 						<tr>
 							<th>Plocha zahrady:</th>
@@ -133,7 +145,7 @@ body {
 						</tr>
 						<tr>
 							<th>Stars:</th>
-							<td ng-controller="estateRatingController" ng-init="stars = estate.stars; srealityId = estate.srealityId;">
+							<td ng-controller="estateRatingController" ng-init="stars = estate.stars; starsOld = estate.stars; srealityId = estate.srealityId;">
 								<rating ng-model="stars" max="maxStars"></rating>
 							</td>
 						</tr>
