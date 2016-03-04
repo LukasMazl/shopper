@@ -73,7 +73,6 @@ public class SrealityFetcherService {
 				EstateUtils.addHistoryRecord(estate, "Smazano");
 				estateService.saveEstate(estate);
 				countDeleted++;
-				log.info(estate.getHistory());
 			}
 		}
 		log.info("Deleted " + countDeleted + " estates");
@@ -130,7 +129,6 @@ public class SrealityFetcherService {
 			estateOld.setUrl(estateNew.getUrl());
 			estateOld.setZoom(estateNew.getZoom());
 			estateService.saveEstate(estateOld);
-			log.info(estateOld.getHistory());
 			return true;
 		}
 	}
@@ -166,7 +164,7 @@ public class SrealityFetcherService {
 		// http://www.sreality.cz/api/cs/v1/estates?category_main_cb=2&category_type_cb=1&locality_region_id=10&per_page=60&page=2
 		val sanitizedPage = Math.max(1, page);
 		val sanitizedPerPage = Math.max(20, Math.min(60, perPage));
-		log.info("Fetching estate listing page {} (x{}) ...", page, perPage);
+		log.debug("Fetching estate listing page {} (x{}) ...", page, perPage);
 		try {
 			val estateListingRespose = this.fetchSrealityEstate(wt -> {
 				wt = this.addParam(wt, "category_main_cb", srealityFetcherConfig.getCategoryMain());
@@ -189,7 +187,7 @@ public class SrealityFetcherService {
 
 	private Response fetchEstate(final long estateHashId) {
 		// http://www.sreality.cz/api/cs/v1/estates/3410497628
-		log.info("Fetching estate id {} ...", estateHashId);
+		log.debug("Fetching estate id {} ...", estateHashId);
 		return this.fetchSrealityEstate(wt -> wt.path(Long.toString(estateHashId)));
 	}
 

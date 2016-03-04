@@ -5,6 +5,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.lang.time.DateFormatUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,9 +37,10 @@ public class EstateService {
 	void saveEstate(final Estate estate) {
 		final boolean isNew = estate.getId() == 0;
 		if (isNew) {
-			log.info("Insert" + estate.getAddress() + ", " + estate.getUrl());
+			log.info("Insert " + estate.getAddress() + ", " + estate.getUrl());
 		} else {
-			log.info("Update" + estate.getAddress() + ", " + estate.getUrl());
+			log.info("Update " + DateFormatUtils.format(estate.getDateSort(), "dd.MM.yyyy")
+					+ ", " + estate.getAddress() + ", " + estate.getUrl());
 		}
 		try {
 			this.estateRepository.save(estate);
