@@ -41,6 +41,7 @@ import com.janprach.shopper.sreality.util.CoordinateUtils.Coordinates;
 @Component
 public class SrealityFetcherService {
 	private static final int ESTATE_SUMMARIES_PER_PAGE = 20;
+	private static final int MAX_RETRIES = 3;
 
 	private final Client client;
 	private final EstateService estateService;
@@ -119,28 +120,42 @@ public class SrealityFetcherService {
 	}
 
 	private Optional<EstateListing> fetchEstateListing(final int page, final int perPage) {
+		if (page > 60)
+			return null;
+		
 		// http://www.sreality.cz/api/cs/v1/estates?category_main_cb=2&category_type_cb=1&locality_region_id=10&per_page=60&page=2
 		val sanitizedPage = Math.max(1, page);
 		val sanitizedPerPage = Math.max(20, Math.min(60, perPage));
 		log.debug("Fetching estate listing page {} (x{}) ...", page, perPage);
 		try {
-			val estateListingRespose = this.fetchSrealityEstate(wt -> {
-				wt = this.addParam(wt, "category_main_cb", srealityFetcherConfig.getCategoryMain());
-				wt = this.addParam(wt, "category_sub_cb", srealityFetcherConfig.getCategorySub());
-				wt = this.addParam(wt, "category_type_cb", srealityFetcherConfig.getCategoryType());
-				wt = this.addParam(wt, "locality_district_id", srealityFetcherConfig.getLocalityDistrict());
-				wt = this.addParam(wt, "locality_region_id", srealityFetcherConfig.getLocalityRegion());
-				wt = this.addParam(wt, "czk_price_summary_order2", srealityFetcherConfig.getPriceRange());
-				wt = wt.queryParam("per_page", Integer.toString(sanitizedPerPage));
-				wt = wt.queryParam("page", Integer.toString(sanitizedPage));
-				return wt;
-			});
-			val estateListing = estateListingRespose.readEntity(com.janprach.shopper.sreality.api.EstateListing.class);
-			return Optional.of(estateListing);
+			Thread.sleep(1000L + (long) (Math.random() * 3000L));
+			for (int retries = 0; retries < MAX_RETRIES; retries++) {
+				val estateListingRespose = this.fetchSrealityEstate(wt -> {
+					wt = this.addParam(wt, "category_main_cb", srealityFetcherConfig.getCategoryMain());
+					wt = this.addParam(wt, "category_sub_cb", srealityFetcherConfig.getCategorySub());
+					wt = this.addParam(wt, "category_type_cb", srealityFetcherConfig.getCategoryType());
+					wt = this.addParam(wt, "locality_district_id", srealityFetcherConfig.getLocalityDistrict());
+					wt = this.addParam(wt, "locality_region_id", srealityFetcherConfig.getLocalityRegion());
+					wt = this.addParam(wt, "czk_price_summary_order2", srealityFetcherConfig.getPriceRange());
+					wt = wt.queryParam("per_page", Integer.toString(sanitizedPerPage));
+					wt = wt.queryParam("page", Integer.toString(sanitizedPage));
+					return wt;
+				});
+				val statusFamily = estateListingRespose.getStatusInfo().getFamily();
+				if (statusFamily == Response.Status.Family.SERVER_ERROR && retries < MAX_RETRIES) {
+					val sleepTime = 60 * (1 << retries);
+					val responseString = estateListingRespose.readEntity(String.class);
+					log.warn("Server error (http status 5xx). Retry in {} s.\n{}", sleepTime, responseString);
+					Thread.sleep(1000L * sleepTime);
+				} else {
+					val estateListing = estateListingRespose.readEntity(EstateListing.class);
+					return Optional.of(estateListing);
+				}
+			}
 		} catch (final Exception e) {
 			log.error("Failed fetching or parsing estate listing page {} (x{}).", page, perPage, e);
-			return Optional.<EstateListing> empty();
 		}
+		return Optional.<EstateListing> empty();
 	}
 
 	private Response fetchEstate(final long estateHashId) {
