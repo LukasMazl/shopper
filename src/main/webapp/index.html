@@ -3,38 +3,38 @@
 <head>
 
 
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>sreality.cz listings...</title>
 
 
 
 <!-- jquery -->
-<script type="text/javascript" src="webjars/jquery/2.1.3/jquery.min.js"></script>
+<script type="text/javascript" src="/webjars/jquery/2.1.3/jquery.js"></script>
 <!-- jquery - optional -->
-<script type="text/javascript" src="webjars/jquery-mousewheel/3.1.12/jquery.mousewheel.js"></script>
+<script type="text/javascript" src="/webjars/jquery-mousewheel/3.1.12/jquery.mousewheel.js"></script>
 
 <!-- bootstrap -->
-<link rel="stylesheet" href="webjars/bootstrap/3.3.4/css/bootstrap.min.css">
-<script type="text/javascript" src="webjars/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="/webjars/bootstrap/3.3.4/css/bootstrap.css" type="text/css" />
+<script type="text/javascript" src="/webjars/bootstrap/3.3.4/js/bootstrap.js"></script>
 <!-- bootstrap - optional -->
-<link rel="stylesheet" href="webjars/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="/webjars/bootstrap/3.3.4/css/bootstrap-theme.css" type="text/css" />
 
 <!-- angularjs -->
-<script type="text/javascript" src="webjars/angularjs/1.3.15/angular.min.js"></script>
+<script type="text/javascript" src="/webjars/angularjs/1.3.15/angular.js"></script>
 
 <!-- angularjs + bootstrap -->
-<script src="webjars/angular-ui-bootstrap/0.12.1-1/ui-bootstrap-tpls.min.js"></script>
+<script type="text/javascript" src="/webjars/angular-ui-bootstrap/0.12.1-1/ui-bootstrap-tpls.js"></script>
 
 <!-- fancybox -->
-<link rel="stylesheet" href="webjars/fancybox/2.1.5/jquery.fancybox.css" type="text/css" media="screen" />
-<script type="text/javascript" src="webjars/fancybox/2.1.5/jquery.fancybox.pack.js"></script>
+<link rel="stylesheet" href="/webjars/fancybox/2.1.5/jquery.fancybox.css" type="text/css" media="screen" />
+<script type="text/javascript" src="/webjars/fancybox/2.1.5/jquery.fancybox.js"></script>
 <!-- fancybox - optional -->
-<link rel="stylesheet" href="webjars/fancybox/2.1.5/helpers/jquery.fancybox-buttons.css" type="text/css" media="screen" />
-<script type="text/javascript" src="webjars/fancybox/2.1.5/helpers/jquery.fancybox-buttons.js"></script>
-<script type="text/javascript" src="webjars/fancybox/2.1.5/helpers/jquery.fancybox-media.js"></script>
-<link rel="stylesheet" href="webjars/fancybox/2.1.5/helpers/jquery.fancybox-thumbs.css" type="text/css" media="screen" />
-<script type="text/javascript" src="webjars/fancybox/2.1.5/helpers/jquery.fancybox-thumbs.js"></script>
+<link rel="stylesheet" href="/webjars/fancybox/2.1.5/helpers/jquery.fancybox-buttons.css" type="text/css" media="screen" />
+<script type="text/javascript" src="/webjars/fancybox/2.1.5/helpers/jquery.fancybox-buttons.js"></script>
+<script type="text/javascript" src="/webjars/fancybox/2.1.5/helpers/jquery.fancybox-media.js"></script>
+<link rel="stylesheet" href="/webjars/fancybox/2.1.5/helpers/jquery.fancybox-thumbs.css" type="text/css" media="screen" />
+<script type="text/javascript" src="/webjars/fancybox/2.1.5/helpers/jquery.fancybox-thumbs.js"></script>
 
 <!-- custom -->
 <script type="text/javascript" src="./js/estateListing.js"></script>
@@ -97,7 +97,7 @@ body {
 			<button ng-click="searchSubmit();">Hledat</button>
 		</form>
 		<div class="estate" ng-repeat="estate in estates">
-			<a href="{{estate.url}}"><h3>{{estate.metaDescription}}</h3></a>
+			<h3><a href="{{estate.url}}">{{estate.metaDescription}}</a></h3>
 			<div class="row">
 				<div class="col-lg-4 col-md-5 col-xs-12">
 					<table class="estateDataTable">
