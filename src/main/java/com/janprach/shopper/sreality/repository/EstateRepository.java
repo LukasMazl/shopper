@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -22,6 +23,11 @@ public interface EstateRepository extends JpaRepository<Estate, Long> {
 			@Param("active") final boolean active,
 			@Param("visible") final boolean visible,
 			@Param("address") final String address, final Pageable pageable);
+
+	List<Estate> findAllByStarsGreaterThanAndAddressLike(
+			@Param("stars") final Integer stars,
+			@Param("address") final String address,
+			final Sort sort);
 
 	List<Estate> findAllByDuplicityIdNotAndAddressLike(
 			@Param("duplicityId") final Long duplicityId,
