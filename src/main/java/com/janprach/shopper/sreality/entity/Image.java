@@ -5,6 +5,8 @@ import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
+import org.springframework.data.rest.core.annotation.RestResource;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,6 +25,7 @@ public class Image extends EntityBase {
 	@Column(length = 4 * 1024)
 	private String description;
 
+	@RestResource(rel = "images")
 	@JsonIgnore
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "ESTATE_ID")
