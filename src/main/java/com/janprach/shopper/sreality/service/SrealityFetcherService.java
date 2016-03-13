@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -36,7 +35,6 @@ import com.janprach.shopper.sreality.entity.Image;
 import com.janprach.shopper.sreality.entity.RawResponse;
 import com.janprach.shopper.sreality.util.CoordinateUtils;
 import com.janprach.shopper.sreality.util.CoordinateUtils.Coordinates;
-import com.janprach.shopper.sreality.util.EstateUtils;
 
 @Slf4j
 @AllArgsConstructor(onConstructor = @__({ @javax.inject.Inject }))
@@ -59,77 +57,37 @@ public class SrealityFetcherService {
 		while (iterator.hasNext()) {
 			EstateSummary estateSummary = iterator.next();
 			srealityIds.add(estateSummary.getHashId());
-			if (fetchEstateSummary(estateSummary)) {
+			if (fetchAndStoreEstateSummary(estateSummary)) {
 				countSaved++;
 			}
 		}
 		log.info("Saved " + countSaved + " estates");
 
-		int countDeleted = 0;
-		List<Estate> estates = this.estateService.findAllActive();
-		for (Estate estate : estates) {
-			if (!srealityIds.contains(estate.getSrealityId())) {
-				estate.setActive(false);
-				EstateUtils.addHistoryRecord(estate, "Smazano");
-				estateService.saveEstate(estate);
-				countDeleted++;
-			}
-		}
+		int countDeleted = this.estateService.updateInactive(srealityIds);
 		log.info("Deleted " + countDeleted + " estates");
 	}
 
-	private boolean fetchEstateSummary(EstateSummary estateSummary) {
+	private boolean fetchAndStoreEstateSummary(EstateSummary estateSummary) {
 		Estate estateOld = this.estateService.findBySrealityId(estateSummary.getHashId());
 		if (estateOld == null) {
-			return fetchEstateNew(estateSummary);
-		} else {
-			return fetchEstateExisting(estateSummary, estateOld);
-		}
-	}
-
-	private boolean fetchEstateNew(EstateSummary estateSummary) {
-		Estate estateNew = fetchEstate(estateSummary);
-		if (estateNew == null) {
-			return false;
-		}
-
-		// novy
-		estateService.saveEstate(estateNew);
-		return true;
-	}
-
-	private boolean fetchEstateExisting(EstateSummary estateSummary, Estate estateOld) {
-		if (estateEquals(estateOld, estateSummary)) {
-			// beze zmeny
-			return false;
-		} else {
-			// zmeneny
-			// TODO: what will happen on update with old/new images and response?
+			// new
 			Estate estateNew = fetchEstate(estateSummary);
 			if (estateNew == null) {
 				return false;
 			}
-
-			EstateUtils.addHistoryRecord(estateOld, "Cena: " + estateOld.getPrice() + " -> " + estateNew.getPrice());
-			estateOld.setActive(true);
-			estateOld.setAreaBuild(estateNew.getAreaBuild());
-			estateOld.setAreaFloor(estateNew.getAreaFloor());
-			estateOld.setAreaGarden(estateNew.getAreaGarden());
-			estateOld.setAreaTotal(estateNew.getAreaTotal());
-			estateOld.setAreaUsable(estateNew.getAreaUsable());
-			estateOld.setAddress(estateNew.getAddress());
-			estateOld.setDescription(estateNew.getDescription());
-			estateOld.setLatitude(estateNew.getLatitude());
-			estateOld.setLongitude(estateNew.getLongitude());
-			estateOld.setMetaDescription(estateNew.getMetaDescription());
-			estateOld.setPrice(estateNew.getPrice());
-			estateOld.setSrealityId(estateNew.getSrealityId());
-			estateOld.setState(estateNew.getState());
-			estateOld.setTitle(estateNew.getTitle());
-			estateOld.setUrl(estateNew.getUrl());
-			estateOld.setZoom(estateNew.getZoom());
-			estateService.saveEstate(estateOld);
-			return true;
+			return estateService.convertAndInsert(estateNew);
+		} else {
+			if (estateEquals(estateOld, estateSummary)) {
+				// not changed
+				return false;
+			} else {
+				// changed
+				Estate estateNew = fetchEstate(estateSummary);
+				if (estateNew == null) {
+					return false;
+				}
+				return estateService.convertAndUpdate(estateOld, estateNew);
+			}
 		}
 	}
 

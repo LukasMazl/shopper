@@ -8,6 +8,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Index;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -84,14 +85,15 @@ public class Estate extends EntityBase {
 	@Column
 	private Integer stars = 0;
 
-	@Column(length = 64 * 1024)
-	private String history = "";
-
 	@OneToMany(mappedBy = "estate")
 	private List<Image> images = new ArrayList<Image>();
 
 	@OneToMany(mappedBy = "estate")
 	private List<RawResponse> rawResponses = new ArrayList<RawResponse>();
+
+	@OneToMany(mappedBy = "estate")
+	@OrderBy("createdAt ASC")
+	private List<History> histories = new ArrayList<History>();
 
 	// @Enumerated(EnumType.ORDINAL)
 	// @Temporal(TemporalType.DATE)

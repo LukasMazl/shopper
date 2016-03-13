@@ -154,7 +154,9 @@ body {
 				<div class="col-lg-8 col-md-7 col-xs-12">
 					{{estate.description}}
 					<br><br>
-					<div style="white-space: pre;">{{estate.history}}</div>
+					<div ng-repeat="history in estate.histories">
+					{{timestampToLocaleDateString(history.createdAt)}} {{history.message}}
+					</div>
 				</div>
 			</div>
 			<div class="row">
