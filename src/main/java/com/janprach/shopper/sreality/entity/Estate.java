@@ -85,6 +85,9 @@ public class Estate extends EntityBase {
 	@Column
 	private Integer stars = 0;
 
+	@Column(nullable = false)
+	private Long duplicityId = 0L;
+
 	@Column
 	private String note;
 

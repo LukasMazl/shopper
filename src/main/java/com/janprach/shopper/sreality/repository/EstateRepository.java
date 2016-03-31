@@ -23,7 +23,36 @@ public interface EstateRepository extends JpaRepository<Estate, Long> {
 			@Param("visible") final boolean visible,
 			@Param("address") final String address, final Pageable pageable);
 
+	List<Estate> findAllByDuplicityIdNotAndAddressLike(
+			@Param("duplicityId") final Long duplicityId,
+			@Param("address") final String address,
+			final Sort sort);
+
 	List<Estate> findAllByActive(final boolean active);
+
+ 	@Query(value = "SELECT * FROM estate "
+ 			+ " WHERE created_at > NOW() - INTERVAL '3 month' "
+ 			+ " AND address LIKE ? "
+ 			+ " AND price = ? "
+ 			+ " AND (area_total = ? OR area_usable = ?) ", nativeQuery = true)
+ 	List<Estate> findAllDuplicateByAddressByPrice(final String address, final Long price,
+ 			final Integer area_total, final Integer area_usable);
+
+ 	@Query(value = "SELECT * FROM estate "
+ 			+ " WHERE created_at > NOW() - INTERVAL '3 month' "
+ 			+ " AND price = ? "
+ 			+ " AND area_total = ? "
+ 			+ " AND area_usable = ? ", nativeQuery = true)
+ 	List<Estate> findAllDuplicateByPrice(final Long price,
+ 			final Integer area_total, final Integer area_usable);
+
+ 	@Query(value = "SELECT * FROM estate "
+ 			+ " WHERE created_at > NOW() - INTERVAL '3 month' "
+ 			+ " AND address LIKE ? "
+ 			+ " AND area_total = ? "
+ 			+ " AND area_usable = ? ", nativeQuery = true)
+ 	List<Estate> findAllDuplicateByAddress(final String address,
+ 			final Integer area_total, final Integer area_usable);
 
 	@Modifying
 	@Query("UPDATE Estate e SET e.stars = :stars WHERE e.srealityId = :srealityId")

@@ -1,5 +1,6 @@
 package com.janprach.shopper.sreality.service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -42,9 +44,65 @@ public class EstateService {
 		return this.estateRepository.findAllByActive(true);
 	}
 
+ 	@Transactional(readOnly = true)
+ 	public List<Estate> findAllDuplicate(final Estate estate) {
+ 		if (estate.getAddress().contains(",")) {
+ 			List<Estate> estatesDuplicate1 = this.estateRepository.findAllDuplicateByAddressByPrice(
+ 					StringUtils.substringBefore(estate.getAddress(), ",") + "%",
+ 					estate.getPrice(), estate.getAreaTotal(), estate.getAreaUsable());
+ 			if (!estatesDuplicate1.isEmpty())
+ 				return estatesDuplicate1;
+ 		}
+
+ 		List<Estate> estatesDuplicate2 = this.estateRepository.findAllDuplicateByPrice(
+ 				estate.getPrice(), estate.getAreaTotal(), estate.getAreaUsable());
+ 		if (!estatesDuplicate2.isEmpty())
+ 			return estatesDuplicate2;
+
+ 		if (estate.getAddress().contains(",")) {
+ 			List<Estate> estatesDuplicate3 = this.estateRepository.findAllDuplicateByAddress(
+ 					estate.getAddress(),estate.getAreaTotal(), estate.getAreaUsable());
+ 			if (!estatesDuplicate3.isEmpty())
+ 				return estatesDuplicate3;
+ 		}
+ 		
+ 		return new ArrayList<Estate>();
+ 	}
+
 	@Transactional
 	public boolean convertAndInsert(Estate estateNew) {
-		saveEstate(estateNew);
+		List<Estate> duplicateEstates = findAllDuplicate(estateNew);
+		if (duplicateEstates.isEmpty()) {
+			// novy
+			saveEstate(estateNew);
+		} else {
+			// duplicitni
+			Estate estateOld = duplicateEstates.get(0);
+			Long duplicityId = estateOld.getDuplicityId();
+			if (duplicityId == 0)
+				duplicityId = estateOld.getId();
+
+			estateNew.setDuplicityId(duplicityId);
+			estateNew.setVisible(estateOld.getVisible());
+			estateNew.setStars(estateOld.getStars());
+			estateNew.setDateSort(estateOld.getDateSort());
+			resetDateSortIfPriceChanged(estateNew, estateOld.getPrice(), estateNew.getPrice());
+			EstateUtils.addHistoryRecord(estateNew, HistoryType.DUPLICITY, "Duplicitni stary: " + estateOld.getUrl());
+			saveEstate(estateNew);
+			
+			estateOld.setDuplicityId(duplicityId);
+			EstateUtils.addHistoryRecord(estateOld, HistoryType.DUPLICITY, "Duplicitni novy: " + estateNew.getUrl());
+			saveEstate(estateOld);
+			
+			if (duplicateEstates.size() > 1)
+			{
+				for (Estate estate : duplicateEstates) {
+					if (!estate.getDuplicityId().equals(duplicityId))
+						log.error("Another duplicityId: " + estate.getDuplicityId() + " - " + estate.getUrl());
+				}
+			}
+		}
+		
 		return true;
 	}
 
