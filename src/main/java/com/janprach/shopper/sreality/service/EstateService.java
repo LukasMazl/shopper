@@ -1,5 +1,6 @@
 package com.janprach.shopper.sreality.service;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
@@ -7,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang.time.DateFormatUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +29,9 @@ public class EstateService {
 	private final HistoryRepository historyRepository;
 	private final ImageRepository imageRepository;
 	private final RawResponseRepository rawResponseRepository;
-
+	@Value("${com.janprach.shopper.priceDiffThreshold}")
+	private final int priceDiffThreshold;
+	
 	@Transactional(readOnly = true)
 	public Estate findBySrealityId(final long srealityId) {
 		return this.estateRepository.findBySrealityId(srealityId);
@@ -49,10 +53,9 @@ public class EstateService {
 		// TODO: what will happen on update with old/new images and response?
 		estateOld = this.estateRepository.findOne(estateOld.getId());
 
+		resetDateSortIfPriceChanged(estateOld, estateOld.getPrice(), estateNew.getPrice());
 		if (!estateOld.getActive())
 			EstateUtils.addHistoryRecord(estateOld, HistoryType.ACTIVE, "Vlozeno");
-		if (!estateNew.getPrice().equals(estateOld.getPrice()))
-			EstateUtils.addHistoryRecord(estateOld, HistoryType.PRICE, "Cena: " + estateOld.getPrice() + " -> " + estateNew.getPrice());
 
 		estateOld.setActive(true);
 		estateOld.setAreaBuild(estateNew.getAreaBuild());
@@ -73,6 +76,14 @@ public class EstateService {
 		estateOld.setZoom(estateNew.getZoom());
 		saveEstate(estateOld);
 		return true;
+	}
+
+	private void resetDateSortIfPriceChanged(Estate estate, Long priceOld, Long priceNew) {
+		// jen pri vetsi sleve chceme radit nahoru
+		if (priceOld - priceNew > priceDiffThreshold)
+			estate.setDateSort(new Date());
+		if (!priceNew.equals(priceOld))
+			EstateUtils.addHistoryRecord(estate, HistoryType.PRICE, "Cena: " + priceOld + " -> " + priceNew);
 	}
 
 	@Transactional
