@@ -85,6 +85,9 @@ public class Estate extends EntityBase {
 	@Column
 	private Integer stars = 0;
 
+	@Column
+	private String note;
+
 	@OneToMany(mappedBy = "estate")
 	private List<Image> images = new ArrayList<Image>();
 

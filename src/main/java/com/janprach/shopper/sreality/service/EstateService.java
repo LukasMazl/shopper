@@ -115,4 +115,9 @@ public class EstateService {
 	public void setStarsFor(final long srealityId, final int stars) {
 		this.estateRepository.setStarsFor(srealityId, stars);
 	}
+
+	@Transactional
+	public void setNoteFor(final long srealityId, final String note) {
+		this.estateRepository.setNoteFor(srealityId, note);
+	}
 }

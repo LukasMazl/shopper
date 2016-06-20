@@ -18,4 +18,10 @@ public class EstateResource {
 			@RequestParam final int stars) {
 		this.estateService.setStarsFor(srealityId, stars);
 	}
+
+	@RequestMapping("/api/v1/setNote")
+	public void setNote(@RequestParam final long srealityId,
+			@RequestParam final String note) {
+		this.estateService.setNoteFor(srealityId, note);
+	}
 }
