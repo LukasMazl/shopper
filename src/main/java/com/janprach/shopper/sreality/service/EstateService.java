@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
-import lombok.AllArgsConstructor;
+//import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang.StringUtils;
@@ -23,15 +23,26 @@ import com.janprach.shopper.sreality.repository.RawResponseRepository;
 import com.janprach.shopper.sreality.util.EstateUtils;
 
 @Slf4j
-@AllArgsConstructor(onConstructor = @__({ @javax.inject.Inject }))
+//@AllArgsConstructor(onConstructor = @__({ @javax.inject.Inject }))
 @Component("estateService")
 @Transactional
 public class EstateService {
+	@javax.inject.Inject
+	public EstateService(EstateRepository estateRepository, HistoryRepository historyRepository,
+			ImageRepository imageRepository, RawResponseRepository rawResponseRepository, @Value("${com.janprach.shopper.sreality.priceDiffThreshold}") int priceDiffThreshold) {
+		super();
+		this.estateRepository = estateRepository;
+		this.historyRepository = historyRepository;
+		this.imageRepository = imageRepository;
+		this.rawResponseRepository = rawResponseRepository;
+		this.priceDiffThreshold = priceDiffThreshold;
+	}
+
 	private final EstateRepository estateRepository;
 	private final HistoryRepository historyRepository;
 	private final ImageRepository imageRepository;
 	private final RawResponseRepository rawResponseRepository;
-	@Value("${com.janprach.shopper.priceDiffThreshold}")
+	@Value("${com.janprach.shopper.sreality.priceDiffThreshold}")
 	private final int priceDiffThreshold;
 	
 	@Transactional(readOnly = true)
