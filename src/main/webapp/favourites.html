@@ -9,6 +9,8 @@
 
 
 
+<link rel="stylesheet" href="/css/shopper.css" type="text/css" />
+
 <!-- jquery -->
 <script type="text/javascript" src="/webjars/jquery/2.1.3/jquery.js"></script>
 <!-- jquery - optional -->
@@ -42,68 +44,6 @@
 
 
 <style>
-body {
-}
-
-.estateSearch {
-	margin-top: 1em;
-	margin-bottom: 1em;
-}
-
-.estate {
-    border-style: solid;
-}
-
-.stars1 {
-	background-color: #FFFFF8;
-	border-color: #FEFEE8;
-}
-
-.stars2 {
-	background-color: #FFFFE0;
-	border-color: #FCFCC8;
-}
-
-.stars3 {
-	background-color: #FFFFC0;
-	border-color: #FCFC90;
-}
-
-.inactive {
-	background-color: LightCoral;
-	border-color: #E07070;
-}
-
-.invisible1 {
-	background-color: LightGrey;
-	border-color: Silver;
-}
-
-.estateDataTable th {
-	text-align: left;
-	vertical-align: top;
-	font-weight: normal;
-}
-
-.estateDataTable td {
-	padding-left: 1em;
-}
-
-.estateImage {
-	/* clear: both; */
-	/* display: table-cell; */
-	/* float: left; */
-	margin-bottom: 1em;
-	margin-top: 1em;
-	max-width: 100%;
-	/* padding: 0.5em; */
-	/* vertical-align: middle; */
-}
-
-.glyphicon-star {
-	color: orange;
-}
-
 .estates {
 	width: 100%;
 }
@@ -123,10 +63,13 @@ body {
 			<button ng-click="searchSubmit();">Hledat</button>
 		</form>
 		<div class="row">
-			<div class="estate col-lg-2 col-md-5 col-xs-12" ng-repeat="estate in estates"
+			<div class="estateSummary col-lg-2 col-md-5 col-xs-12" ng-repeat="estate in estates"
  					ng-class="{'inactive' : !estate.active, 'invisible1' : !estate.visible,
- 					'stars3' : estate.stars == 3, 'stars2' : estate.stars == 2, 'stars1' : estate.stars == 1}">
-				<h4><b><a href="{{estate.url}}"><span style="white-space: pre;">{{addressShort(estate)}}</span></a></b></h4>
+ 					'stars3' : estate.stars == 3, 'stars2' : estate.stars == 2,
+ 					'stars1' : estate.stars == 1, 'stars0' : estate.stars == 0}">
+				<h4><a href="{{estate.url}}">
+					<b><span style="white-space: pre;">{{addressShort(estate)}}</span></b>
+				</a></h4>
 				<table class="estateDataTable">
 					<tr>
 						<th>Cena:</th>
@@ -145,7 +88,9 @@ body {
 						<th>Užitná:</th>
 						<td title="Užitná / Zastavěná / Podlahová">
 							<b>{{estate.areaUsable}} m<sup>2</sup></b> / {{estate.areaBuild}} m<sup>2</sup>
-							<span ng-if="estate.areaFloor != null && estate.areaFloor != estate.areaUsable">/ {{estate.areaFloor}} m<sup>2</sup></span>
+							<span ng-if="estate.areaFloor != null && estate.areaFloor != estate.areaUsable">
+								/ {{estate.areaFloor}} m<sup>2</sup>
+							</span>
 							<span ng-if="estate.areaFloor == null">/ -</span>
 						</td>
 					</tr>
@@ -165,23 +110,31 @@ body {
 						</td>
 					</tr>
 					<tr>
-						<th title="{{(estate.active ? '' : 'Není na sreality')}} {{(estate.visible ? '' : 'Skryto')}}">Stars:</th>
+						<th title="{{(estate.active ? '' : 'Není na sreality')}} {{(estate.visible ? '' : 'Skryto')}}">
+							Stars:
+						</th>
 						<td>
-							<span ng-controller="estateRatingController" ng-init="stars = estate.stars; starsOld = estate.stars; srealityId = estate.srealityId;">
+							<span ng-controller="estateRatingController"
+									ng-init="stars = estate.stars; starsOld = estate.stars; srealityId = estate.srealityId;">
 								<rating ng-model="stars" max="maxStars" ng-click="setStars()"></rating>
 							</span>
 							&nbsp;
 							<span ng-controller="estateVisibleController">
-								<button type="button" class="btn btn-primary" ng-model="estate.visible"
-										btn-checkbox btn-checkbox-true="true" btn-checkbox-false="false"
-										ng-change="setVisible()">
-									{{(estate.visible ? 'V' : 'H')}}
+								<button type="button" class="btn btn-xs glyphicon"
+										ng-class="{'glyphicon-eye-open' : estate.visible, 'glyphicon-eye-close' : !estate.visible}"
+ 										btn-checkbox btn-checkbox-true="true" btn-checkbox-false="false"
+										ng-model="estate.visible" ng-change="setVisible()">
 								</button>
 							</span>
 							&nbsp;
-							<a class="fancyboxIframe fancybox.iframe" href="{{constructGoogleMapsUrl(estate.address)}}">
+							<a ng-show="estate.active" href="{{estate.url}}">
+								<img title="sreality.cz" src="http://www.sreality.cz/img/sreality-app-logo2.png" width="16" height="16">
+							</a>
+							&nbsp;
+							<a href="{{constructGoogleMapsUrl(estate.address)}}">
 								<img title="maps.google.com" src="images/maps.ico">
 							</a>
+							&nbsp;
 							<button ng-show="estate.duplicityId != 0" class="btn" type="submit" ng-click="">D</button>
 						</td>
 					</tr>
@@ -191,14 +144,16 @@ body {
 							<span ng-hide="editing" ng-click="editing = true">{{estate.note}}</span>
 							<form ng-show="editing" ng-submit="editing = false">
 								<input type="text" ng-model="estate.note"/>
-								<button class="btn" type="submit" ng-click="setNote()">Save</button>
+								<button class="btn btn-xs glyphicon glyphicon-floppy-disk" type="submit" ng-click="setNote()">
+								</button>
 							</form>
 						</td>
 					</tr>
 				</table>
 				<div ng-repeat="image in estate.images" ng-if="$index < 1">
-					<a class="fancyboxImage" rel="{{'estate-' + estate.srealityId}}" href="{{image.url}}"> <img class="estateImage"
-						ng-src="{{smallImageUrl(image.url)}}" alt="{{image.description}}" height="189" width="248" />
+					<a class="fancyboxImage" rel="{{'estate-' + estate.srealityId}}" href="{{image.url}}">
+						<img class="estateImage" ng-src="{{smallImageUrl(image.url)}}"
+								alt="{{image.description}}" height="189" width="248" />
 					</a>
 				</div>
 			</div>
