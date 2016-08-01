@@ -122,9 +122,9 @@ public class EstateService {
 		// TODO: what will happen on update with old/new images and response?
 		estateOld = this.estateRepository.findOne(estateOld.getId());
 
-		resetDateSortIfPriceChanged(estateOld, estateOld.getPrice(), estateNew.getPrice());
 		if (!estateOld.getActive())
 			EstateUtils.addHistoryRecord(estateOld, HistoryType.ACTIVE, "Vlozeno");
+		resetDateSortIfPriceChanged(estateOld, estateOld.getPrice(), estateNew.getPrice());
 
 		estateOld.setActive(true);
 		estateOld.setAreaBuild(estateNew.getAreaBuild());
