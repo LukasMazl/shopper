@@ -197,6 +197,11 @@ public class EstateService {
 	}
 
 	@Transactional
+	public void setVisibleFor(final long srealityId, final boolean visible) {
+		this.estateRepository.setVisibleFor(srealityId, visible);
+	}
+
+	@Transactional
 	public void setNoteFor(final long srealityId, final String note) {
 		this.estateRepository.setNoteFor(srealityId, note);
 	}

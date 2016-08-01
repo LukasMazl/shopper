@@ -66,6 +66,11 @@ public interface EstateRepository extends JpaRepository<Estate, Long> {
 			@Param("stars") final int stars);
 
 	@Modifying
+	@Query("UPDATE Estate e SET e.visible = :visible WHERE e.srealityId = :srealityId")
+	int setVisibleFor(@Param("srealityId") final long srealityId,
+			@Param("visible") final boolean visible);
+
+	@Modifying
 	@Query("UPDATE Estate e SET e.note = :note WHERE e.srealityId = :srealityId")
 	int setNoteFor(@Param("srealityId") final long srealityId,
 			@Param("note") final String note);
