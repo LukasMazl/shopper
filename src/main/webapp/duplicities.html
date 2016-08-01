@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app="duplicitiesApp">
+<html ng-app="shopperApp">
 <head>
 
 
@@ -41,6 +41,7 @@
 
 <!-- custom -->
 <script type="text/javascript" src="./js/duplicities.js"></script>
+<script type="text/javascript" src="./js/estateSummary.js"></script>
 
 
 
@@ -58,73 +59,20 @@
 
 
 
-	<div class="container estates" ng-controller="duplicitiesController" ng-init="init()">
+	<div class="container estates" ng-controller="duplicitiesController">
 		<form class="estateSearch">
 			<label>Adresa</label>
 			<input type="text" name="searchText" ng-model="searchText" />
 			<button ng-click="searchSubmit();">Hledat</button>
 		</form>
 		<div class="" ng-repeat="(key, value) in estates | groupBy: 'duplicityId'">
-		<div class="row">
-			<div class="estateSummary col-lg-2 col-md-5 col-xs-12" ng-repeat="estate in value"
- 					ng-class="{'inactive' : !estate.active, 'invisible1' : !estate.visible,
- 					'stars3' : estate.stars == 3, 'stars2' : estate.stars == 2,
- 					'stars1' : estate.stars == 1, 'stars0' : estate.stars == 0}">
-				<h4><b><a href="{{estate.url}}">{{estate.address.replace('Praha ', '\nP')}}</a></b></h4>
-				<table class="estateDataTable">
-					<tr>
-						<th>Cena:</th>
-						<td title="{{historyPrice(estate)}}">
-							<b>{{numberWithSpaces(estate.price)}}</b> &nbsp;
-							<span ng-style="(historyPriceDifference(estate) < 0 && {'color':'green'}) || {'color':'red'}">
-								{{numberWithSpacesAndSign(historyPriceDifference(estate))}}
-							</span>
-						</td>
-					</tr>
-					<tr>
-						<th>Stav:</th>
-						<td>{{estate.state}}</td>
-					</tr>
-					<tr>
-						<th>Užitná:</th>
-						<td title="Užitná / Zastavěná / Podlahová">
-							<b>{{estate.areaUsable}} m<sup>2</sup></b> / {{estate.areaBuild}} m<sup>2</sup>
-							<span ng-if="estate.areaFloor != null && estate.areaFloor != estate.areaUsable">/ {{estate.areaFloor}} m<sup>2</sup></span>
-							<span ng-if="estate.areaFloor == null">/ -</span>
-						</td>
-					</tr>
-					<tr>
-						<th>Pozemek:</th>
-						<td title="Pozemek / Zahrada">
-							<b>{{estate.areaTotal}} m<sup>2</sup></b>
-							<span ng-if="estate.areaGarden != null">/ {{estate.areaGarden}} m<sup>2</sup></span>
-							<span ng-if="estate.areaGarden == null">/ -</span>
-						</td>
-					</tr>
-					<tr>
-						<th>Datum:</th>
-						<td>
-							{{timestampToLocaleDateString(estate.createdAt)}}
-							({{timestampToLocaleDateString(estate.dateSort)}})
-						</td>
-					</tr>
-					<tr>
-						<th title="{{(estate.active ? '' : 'Není na sreality')}} {{(estate.visible ? '' : 'Skryto')}}">Stars:</th>
-						<td ng-controller="estateRatingController" ng-init="stars = estate.stars; starsOld = estate.stars; srealityId = estate.srealityId;">
-							<rating ng-model="stars" max="maxStars" ng-click="setStars()"></rating> &nbsp;
-							<a class="fancyboxIframe fancybox.iframe" href="{{constructGoogleMapsUrl(estate.address)}}">
-								<img title="maps.google.com" src="images/maps.ico">
-							</a>
-							<b>{{estate.duplicityId}}</b>
-						</td>
-					</tr>
-				</table>
-				<div ng-repeat="image in estate.images" ng-if="$index < 1">
-					<a class="fancyboxImage" rel="{{'estate-' + estate.srealityId}}" href="{{image.url}}"> <img class="estateImage"
-						ng-src="{{smallImageUrl(image.url)}}" alt="{{image.description}}" height="189" width="248" />
-					</a>
+			<div class="row">
+				<div class="estateSummary col-lg-2 col-md-5 col-xs-12" ng-repeat="estate in value"
+ 						ng-class="{'inactive' : !estate.active, 'invisible1' : !estate.visible,
+ 						'stars3' : estate.stars == 3, 'stars2' : estate.stars == 2,
+ 						'stars1' : estate.stars == 1, 'stars0' : estate.stars == 0}">
+					<estate-summary estate="estate"></estate-summaty>
 				</div>
-			</div>
 			</div>
 			<div style="clear: both;"></div>
 		</div>

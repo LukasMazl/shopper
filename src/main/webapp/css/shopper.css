@@ -10,15 +10,14 @@ body {
 	margin-bottom: 1em;
 }
 
+.estateFrame {
+    border-style: solid;
+}
+
 .estate {
 	margin-bottom: 2em;
 	padding-left: 1em;
 	padding-right: 1em;
-    border-style: solid;
-}
-
-.estateSummary {
-    border-style: solid;
 }
 
 .estateDataTable th {

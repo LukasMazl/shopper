@@ -1,0 +1,91 @@
+<div class="estateSummary">
+	<h4><a href="{{$ctrl.estate.url}}">
+		<b><span style="white-space: pre;">{{$ctrl.addressShort($ctrl.estate)}}</span></b>
+	</a></h4>
+	<table class="estateDataTable">
+		<tr>
+			<th>Cena:</th>
+			<td title="{{$ctrl.historyPrice($ctrl.estate)}}">
+				<b>{{$ctrl.numberWithSpaces($ctrl.estate.price)}}</b> &nbsp;
+				<span ng-style="($ctrl.historyPriceDifference($ctrl.estate) < 0 && {'color':'green'}) || {'color':'red'}">
+					{{$ctrl.numberWithSpacesAndSign($ctrl.historyPriceDifference($ctrl.estate))}}
+				</span>
+			</td>
+		</tr>
+		<tr>
+			<th>Stav:</th>
+			<td>{{$ctrl.estate.state}}</td>
+		</tr>
+		<tr>
+			<th>Užitná:</th>
+			<td title="Užitná / Zastavěná / Podlahová">
+				<b>{{$ctrl.estate.areaUsable}} m<sup>2</sup></b> / {{$ctrl.estate.areaBuild}} m<sup>2</sup>
+				<span ng-if="$ctrl.estate.areaFloor != null && $ctrl.estate.areaFloor != $ctrl.estate.areaUsable">
+					/ {{$ctrl.estate.areaFloor}} m<sup>2</sup>
+				</span>
+				<span ng-if="$ctrl.estate.areaFloor == null">/ -</span>
+			</td>
+		</tr>
+		<tr>
+			<th>Pozemek:</th>
+			<td title="Pozemek / Zahrada">
+				<b>{{$ctrl.estate.areaTotal}} m<sup>2</sup></b>
+				<span ng-if="$ctrl.estate.areaGarden != null">/ {{$ctrl.estate.areaGarden}} m<sup>2</sup></span>
+				<span ng-if="$ctrl.estate.areaGarden == null">/ -</span>
+			</td>
+		</tr>
+		<tr>
+			<th>Datum:</th>
+			<td title="{{$ctrl.historyAll($ctrl.estate)}}">
+				{{$ctrl.dates($ctrl.estate)}}
+			</td>
+		</tr>
+		<tr>
+			<th title="{{($ctrl.estate.active ? '' : 'Není na sreality')}} {{($ctrl.estate.visible ? '' : 'Skryto')}}">
+				Stars:
+			</th>
+			<td>
+				<span ng-controller="estateRatingController"
+						ng-init="estate = $ctrl.estate; starsOld = $ctrl.estate.stars;">
+					<rating ng-model="$ctrl.estate.stars" max="maxStars" ng-click="setStars()"></rating>
+				</span>
+				&nbsp;
+				<span ng-controller="estateVisibleController">
+					<button type="button" class="btn btn-xs glyphicon" ng-init="estate = $ctrl.estate;"
+							ng-class="{'glyphicon-eye-open' : $ctrl.estate.visible, 'glyphicon-eye-close' : !$ctrl.estate.visible}"
+								btn-checkbox btn-checkbox-true="true" btn-checkbox-false="false"
+							ng-model="$ctrl.estate.visible" ng-change="setVisible()">
+					</button>
+				</span>
+				&nbsp;
+				<a ng-show="$ctrl.estate.active" href="{{$ctrl.estate.url}}">
+					<img title="sreality.cz" src="http://www.sreality.cz/img/sreality-app-logo2.png" width="16" height="16">
+				</a>
+				<a href="{{constructGoogleMapsUrl($ctrl.estate.address)}}">
+					<img title="maps.google.com" src="images/maps.ico">
+				</a>
+				&nbsp;
+				<button ng-show="$ctrl.estate.duplicityId != 0" type="button"
+						class="btn btn-xs glyphicon glyphicon-duplicate">
+				</button>
+			</td>
+		</tr>
+		<tr>
+			<th ng-click="editing = true">Poznámka:</th>
+			<td ng-controller="estateNoteController">
+				<span ng-hide="editing" ng-click="editing = true">{{$ctrl.estate.note}}</span>
+				<form ng-show="editing" ng-submit="editing = false" ng-init="estate = $ctrl.estate;">
+					<input type="text" ng-model="$ctrl.estate.note"/>
+					<button class="btn btn-xs glyphicon glyphicon-floppy-disk" type="submit" ng-click="setNote()">
+					</button>
+				</form>
+			</td>
+		</tr>
+	</table>
+	<div ng-repeat="image in $ctrl.estate.images" ng-if="$index < 1">
+		<a class="fancyboxImage" rel="{{'estate-' + $ctrl.estate.srealityId}}" href="{{image.url}}">
+			<img class="estateImage" ng-src="{{$ctrl.smallImageUrl(image.url)}}"
+					alt="{{image.description}}" height="189" width="248" />
+		</a>
+	</div>
+</div>

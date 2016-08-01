@@ -58,7 +58,7 @@
 			<input type="text" name="searchText" ng-model="searchText" />
 			<button ng-click="searchSubmit();">Hledat</button>
 		</form>
-		<div class="estate" ng-repeat="estate in estates"
+		<div class="estate estateFrame" ng-repeat="estate in estates"
  					ng-class="{'inactive' : !estate.active, 'invisible1' : !estate.visible,
  					'stars3' : estate.stars == 3, 'stars2' : estate.stars == 2,
  					'stars1' : estate.stars == 1, 'stars0' : estate.stars == 0}">

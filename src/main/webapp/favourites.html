@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app="favouritesApp">
+<html ng-app="shopperApp">
 <head>
 
 
@@ -40,6 +40,7 @@
 
 <!-- custom -->
 <script type="text/javascript" src="./js/favourites.js"></script>
+<script type="text/javascript" src="./js/estateSummary.js"></script>
 
 
 
@@ -63,99 +64,11 @@
 			<button ng-click="searchSubmit();">Hledat</button>
 		</form>
 		<div class="row">
-			<div class="estateSummary col-lg-2 col-md-5 col-xs-12" ng-repeat="estate in estates"
- 					ng-class="{'inactive' : !estate.active, 'invisible1' : !estate.visible,
- 					'stars3' : estate.stars == 3, 'stars2' : estate.stars == 2,
- 					'stars1' : estate.stars == 1, 'stars0' : estate.stars == 0}">
-				<h4><a href="{{estate.url}}">
-					<b><span style="white-space: pre;">{{addressShort(estate)}}</span></b>
-				</a></h4>
-				<table class="estateDataTable">
-					<tr>
-						<th>Cena:</th>
-						<td title="{{historyPrice(estate)}}">
-							<b>{{numberWithSpaces(estate.price)}}</b> &nbsp;
-							<span ng-style="(historyPriceDifference(estate) < 0 && {'color':'green'}) || {'color':'red'}">
-								{{numberWithSpacesAndSign(historyPriceDifference(estate))}}
-							</span>
-						</td>
-					</tr>
-					<tr>
-						<th>Stav:</th>
-						<td>{{estate.state}}</td>
-					</tr>
-					<tr>
-						<th>Užitná:</th>
-						<td title="Užitná / Zastavěná / Podlahová">
-							<b>{{estate.areaUsable}} m<sup>2</sup></b> / {{estate.areaBuild}} m<sup>2</sup>
-							<span ng-if="estate.areaFloor != null && estate.areaFloor != estate.areaUsable">
-								/ {{estate.areaFloor}} m<sup>2</sup>
-							</span>
-							<span ng-if="estate.areaFloor == null">/ -</span>
-						</td>
-					</tr>
-					<tr>
-						<th>Pozemek:</th>
-						<td title="Pozemek / Zahrada">
-							<b>{{estate.areaTotal}} m<sup>2</sup></b>
-							<span ng-if="estate.areaGarden != null">/ {{estate.areaGarden}} m<sup>2</sup></span>
-							<span ng-if="estate.areaGarden == null">/ -</span>
-						</td>
-					</tr>
-					<tr>
-						<th>Datum:</th>
-						<td title="{{historyAll(estate)}}">
-							{{timestampToLocaleDateString(estate.createdAt)}}
-							({{timestampToLocaleDateString(estate.dateSort)}})
-						</td>
-					</tr>
-					<tr>
-						<th title="{{(estate.active ? '' : 'Není na sreality')}} {{(estate.visible ? '' : 'Skryto')}}">
-							Stars:
-						</th>
-						<td>
-							<span ng-controller="estateRatingController"
-									ng-init="stars = estate.stars; starsOld = estate.stars; srealityId = estate.srealityId;">
-								<rating ng-model="stars" max="maxStars" ng-click="setStars()"></rating>
-							</span>
-							&nbsp;
-							<span ng-controller="estateVisibleController">
-								<button type="button" class="btn btn-xs glyphicon"
-										ng-class="{'glyphicon-eye-open' : estate.visible, 'glyphicon-eye-close' : !estate.visible}"
- 										btn-checkbox btn-checkbox-true="true" btn-checkbox-false="false"
-										ng-model="estate.visible" ng-change="setVisible()">
-								</button>
-							</span>
-							&nbsp;
-							<a ng-show="estate.active" href="{{estate.url}}">
-								<img title="sreality.cz" src="http://www.sreality.cz/img/sreality-app-logo2.png" width="16" height="16">
-							</a>
-							&nbsp;
-							<a href="{{constructGoogleMapsUrl(estate.address)}}">
-								<img title="maps.google.com" src="images/maps.ico">
-							</a>
-							&nbsp;
-							<button ng-show="estate.duplicityId != 0" class="btn" type="submit" ng-click="">D</button>
-						</td>
-					</tr>
-					<tr>
-						<th ng-click="editing = true">Poznámka:</th>
-						<td ng-controller="estateNoteController">
-							<span ng-hide="editing" ng-click="editing = true">{{estate.note}}</span>
-							<form ng-show="editing" ng-submit="editing = false">
-								<input type="text" ng-model="estate.note"/>
-								<button class="btn btn-xs glyphicon glyphicon-floppy-disk" type="submit" ng-click="setNote()">
-								</button>
-							</form>
-						</td>
-					</tr>
-				</table>
-				<div ng-repeat="image in estate.images" ng-if="$index < 1">
-					<a class="fancyboxImage" rel="{{'estate-' + estate.srealityId}}" href="{{image.url}}">
-						<img class="estateImage" ng-src="{{smallImageUrl(image.url)}}"
-								alt="{{image.description}}" height="189" width="248" />
-					</a>
-				</div>
+			<div class="col-lg-2 col-md-5 col-xs-12 estateFrame" ng-repeat="estate in estates"
+					ng-class="{'inactive' : !estate.active, 'invisible1' : !estate.visible,
+							'stars3' : estate.stars == 3, 'stars2' : estate.stars == 2,
+							'stars1' : estate.stars == 1, 'stars0' : estate.stars == 0}">
+				<estate-summary estate="estate"></estate-summaty>
 			</div>
 			<div style="clear: both;"></div>
 		</div>
