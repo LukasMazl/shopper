@@ -29,6 +29,10 @@ public interface EstateRepository extends JpaRepository<Estate, Long> {
 			@Param("address") final String address,
 			final Sort sort);
 
+	List<Estate> findAllByDuplicityId(
+			@Param("duplicityId") final Long duplicityId,
+			final Sort sort);
+
 	List<Estate> findAllByDuplicityIdNotAndAddressLike(
 			@Param("duplicityId") final Long duplicityId,
 			@Param("address") final String address,

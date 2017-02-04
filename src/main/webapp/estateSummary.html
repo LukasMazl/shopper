@@ -65,9 +65,10 @@
 					<img title="maps.google.com" src="images/maps.ico">
 				</a>
 				&nbsp;
-				<button ng-show="$ctrl.estate.duplicityId != 0" type="button"
-						class="btn btn-xs glyphicon glyphicon-duplicate">
-				</button>
+				<a ng-show="$ctrl.estate.duplicityId != 0" class="btn btn-xs glyphicon glyphicon-duplicate" role="button"
+						href="/duplicities.html#?searchDuplicityId={{$ctrl.estate.duplicityId}}"
+						title="{{$ctrl.estate.duplicityId}}">
+				</a>
 			</td>
 		</tr>
 		<tr>

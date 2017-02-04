@@ -59,10 +59,12 @@
 
 
 
-	<div class="container estates" ng-controller="duplicitiesController">
+	<div class="container estates" ng-controller="duplicitiesController" data-ng-init="init()">
 		<form class="estateSearch">
 			<label>Adresa</label>
-			<input type="text" name="searchText" ng-model="searchText" />
+			<input type="text" name="searchAddress" ng-model="searchAddress" />
+			<label>Duplicity id</label>
+			<input type="text" name="searchDuplicityId" ng-model="searchDuplicityId" />
 			<button ng-click="searchSubmit();">Hledat</button>
 		</form>
 		<div class="" ng-repeat="(key, value) in estates | groupBy: 'duplicityId'">
