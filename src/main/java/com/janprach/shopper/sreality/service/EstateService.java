@@ -2,8 +2,8 @@ package com.janprach.shopper.sreality.service;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 //import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -156,7 +156,7 @@ public class EstateService {
 	}
 
 	@Transactional
-	public int updateInactive(final HashSet<Long> srealityIds) {
+	public int updateInactive(final Set<Long> srealityIds) {
 		int countDeleted = 0;
 		List<Estate> estates = this.findAllActive();
 		for (Estate estate : estates) {
