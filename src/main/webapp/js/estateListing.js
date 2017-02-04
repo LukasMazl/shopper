@@ -6,7 +6,7 @@ estateListingModule.controller('estateListingController', function ($scope, $htt
   $scope.initialLoad = true;
   $scope.estates = [];
   $scope.totalEstates = 0;
-  $scope.pageNumber = 0;
+  $scope.pageNumber = 123456789;
 //  $scope.pageNumber = parseInt($location.search()['pageNumber']) || 1;
   $scope.pageSize = 20;
   $scope.sort = 'dateSort,desc';

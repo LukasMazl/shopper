@@ -2,8 +2,12 @@ package com.janprach.shopper.sreality.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 import org.springframework.data.rest.core.annotation.RestResource;
 
@@ -21,23 +25,18 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @EqualsAndHashCode(callSuper = true)
 @ToString(exclude = "estate")
 @Entity
-public class Image extends EntityBase {
-	@Column(length = 4 * 1024)
-	private String description;
-
-	@RestResource(rel = "images")
+@Table(indexes = { @Index(name = "HISTORY_BY_ESTATE_ID", columnList = "ESTATE_ID") })
+public class History extends EntityBase {
+	@RestResource(rel = "histories")
 	@JsonIgnore
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "ESTATE_ID")
-//	@NaturalId
 	private Estate estate;
 
-//	@Column(name = "ord")
-//	private int order;
-
-	@Column
-	private Long srealityId;
+	@Column(nullable = false)
+	@Enumerated(EnumType.STRING)
+	private HistoryType historyType;
 
 	@Column(nullable = false)
-	private String url;
+	private String message;
 }

@@ -80,3 +80,4 @@ cabal-dev
 # python
 *.pyc
 *.pyo
+.tern-project

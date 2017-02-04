@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html ng-app="shopperApp">
+<head>
+
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Favourites - sreality.cz</title>
+
+
+
+<link rel="stylesheet" href="/css/shopper.css" type="text/css" />
+
+<!-- jquery -->
+<script type="text/javascript" src="/webjars/jquery/2.1.3/jquery.js"></script>
+<!-- jquery - optional -->
+<script type="text/javascript" src="/webjars/jquery-mousewheel/3.1.12/jquery.mousewheel.js"></script>
+
+<!-- bootstrap -->
+<link rel="stylesheet" href="/webjars/bootstrap/3.3.4/css/bootstrap.css" type="text/css" />
+<script type="text/javascript" src="/webjars/bootstrap/3.3.4/js/bootstrap.js"></script>
+<!-- bootstrap - optional -->
+<link rel="stylesheet" href="/webjars/bootstrap/3.3.4/css/bootstrap-theme.css" type="text/css" />
+
+<!-- angularjs -->
+<script type="text/javascript" src="/webjars/angularjs/1.5.6/angular.js"></script>
+
+<!-- angularjs + bootstrap -->
+<script type="text/javascript" src="/webjars/angular-ui-bootstrap/0.12.1-1/ui-bootstrap-tpls.js"></script>
+
+<!-- fancybox -->
+<link rel="stylesheet" href="/webjars/fancybox/2.1.5/jquery.fancybox.css" type="text/css" media="screen" />
+<script type="text/javascript" src="/webjars/fancybox/2.1.5/jquery.fancybox.js"></script>
+<!-- fancybox - optional -->
+<link rel="stylesheet" href="/webjars/fancybox/2.1.5/helpers/jquery.fancybox-buttons.css" type="text/css" media="screen" />
+<script type="text/javascript" src="/webjars/fancybox/2.1.5/helpers/jquery.fancybox-buttons.js"></script>
+<script type="text/javascript" src="/webjars/fancybox/2.1.5/helpers/jquery.fancybox-media.js"></script>
+<link rel="stylesheet" href="/webjars/fancybox/2.1.5/helpers/jquery.fancybox-thumbs.css" type="text/css" media="screen" />
+<script type="text/javascript" src="/webjars/fancybox/2.1.5/helpers/jquery.fancybox-thumbs.js"></script>
+
+<!-- custom -->
+<script type="text/javascript" src="./js/favourites.js"></script>
+<script type="text/javascript" src="./js/estateSummary.js"></script>
+
+
+
+<style>
+.estates {
+	width: 100%;
+}
+</style>
+
+
+
+</head>
+<body>
+
+
+
+	<div class="container estates" ng-controller="favouritesController" ng-init="init()">
+		<form class="estateSearch">
+			<label>Adresa</label>
+			<input type="text" name="searchText" ng-model="searchText" />
+			<button ng-click="searchSubmit();">Hledat</button>
+		</form>
+		<div class="row">
+			<div class="col-lg-2 col-md-5 col-xs-12 estateFrame" ng-repeat="estate in estates"
+					ng-class="{'inactive' : !estate.active, 'invisible1' : !estate.visible,
+							'stars3' : estate.stars == 3, 'stars2' : estate.stars == 2,
+							'stars1' : estate.stars == 1, 'stars0' : estate.stars == 0}">
+				<estate-summary estate="estate"></estate-summaty>
+			</div>
+			<div style="clear: both;"></div>
+		</div>
+	</div>
+
+
+
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$(".fancyboxImage").fancybox({
+				type : 'image',
+				beforeShow : function() {
+					var alt = this.element.find('img').attr('alt');
+					this.inner.find('img').attr('alt', alt);
+					this.title = alt;
+				},
+				openEffect : 'none',
+				closeEffect : 'none'
+			});
+			$(".fancyboxIframe").fancybox({
+			// maxWidth : 800,
+			// maxHeight : 600,
+			// fitToView : false,
+			// width : '80%',
+			// height : '80%',
+			// autoSize : false,
+			// closeClick : false,
+			// openEffect : 'none',
+			// closeEffect : 'none'
+			});
+		});
+	</script>
+
+
+
+</body>
+</html>

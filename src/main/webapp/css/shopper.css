@@ -1,0 +1,69 @@
+body {
+}
+
+.estates {
+	width: 95%;
+}
+
+.estateSearch {
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
+.estateFrame {
+    border-style: solid;
+}
+
+.estate {
+	margin-bottom: 2em;
+	padding-left: 1em;
+	padding-right: 1em;
+}
+
+.estateDataTable th {
+	padding-right: 1em;
+	text-align: left;
+	vertical-align: top;
+	font-weight: normal;
+}
+
+.estateImage {
+	margin-bottom: 1em;
+	margin-top: 1em;
+	max-width: 100%;
+}
+
+
+.glyphicon-star {
+	color: orange;
+}
+
+.stars0 {
+	background-color: #FAFAFA;
+	border-color: #F0F0F0;
+}
+
+.stars1 {
+	background-color: #FFFFF8;
+	border-color: #FEFEE8;
+}
+
+.stars2 {
+	background-color: #FFFFE0;
+	border-color: #FCFCC8;
+}
+
+.stars3 {
+	background-color: #FFFFC0;
+	border-color: #FCFC90;
+}
+
+.inactive {
+	background-color: LightCoral;
+	border-color: #E07070;
+}
+
+.invisible1 {
+	background-color: LightGrey;
+	border-color: Silver;
+}

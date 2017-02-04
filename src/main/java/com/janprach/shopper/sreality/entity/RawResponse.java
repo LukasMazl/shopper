@@ -7,6 +7,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import org.springframework.data.rest.core.annotation.RestResource;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Entity
 @Table(indexes = { @Index(name = "RAW_RESPONSE_BY_ESTATE_ID", columnList = "ESTATE_ID") })
 public class RawResponse extends EntityBase {
+	@RestResource(rel = "rawResponses")
 	@JsonIgnore
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "ESTATE_ID")
