@@ -165,7 +165,7 @@ public class SrealityFetcherService {
 	}
 
 	private Response fetchSrealityEstate(final Function<WebTarget, WebTarget> webTargetModifier) {
-		val estatesWebTarget = this.client.target("http://www.sreality.cz").path("/api/cs/v1/estates");
+		val estatesWebTarget = this.client.target("https://www.sreality.cz").path("/api/cs/v1/estates");
 		val webTarget = webTargetModifier.apply(estatesWebTarget);
 		log.debug("Fetching {}", webTarget.getUri());
 		return webTarget.request(MediaType.APPLICATION_JSON_TYPE)
