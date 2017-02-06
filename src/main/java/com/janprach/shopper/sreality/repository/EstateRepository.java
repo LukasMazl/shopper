@@ -41,28 +41,29 @@ public interface EstateRepository extends JpaRepository<Estate, Long> {
 	List<Estate> findAllByActive(final boolean active);
 
  	@Query(value = "SELECT * FROM estate "
- 			+ " WHERE created_at > NOW() - INTERVAL '3 month' "
- 			+ " AND address LIKE ? "
- 			+ " AND price = ? "
- 			+ " AND (area_total = ? OR area_usable = ?) ", nativeQuery = true)
- 	List<Estate> findAllDuplicateByAddressByPrice(final String address, final Long price,
- 			final Integer area_total, final Integer area_usable);
+ 			+ " WHERE created_at >= DATEADD(MONTH, -3, GETDATE()) "
+ 			+ " AND address LIKE :address "
+ 			+ " AND price = :price "
+ 			+ " AND (area_total = :areaTotal OR area_usable = :areaUsable) ", nativeQuery = true)
+	List<Estate> findDuplicatesByAddressAndPriceAndArea(@Param("address") final String address,
+			@Param("price") final Long price, @Param("areaTotal") final Integer areaTotal,
+			@Param("areaUsable") final Integer areaUsable);
 
  	@Query(value = "SELECT * FROM estate "
- 			+ " WHERE created_at > NOW() - INTERVAL '3 month' "
- 			+ " AND price = ? "
- 			+ " AND area_total = ? "
- 			+ " AND area_usable = ? ", nativeQuery = true)
- 	List<Estate> findAllDuplicateByPrice(final Long price,
- 			final Integer area_total, final Integer area_usable);
+ 			+ " WHERE created_at >= DATEADD(MONTH, -3, GETDATE()) "
+ 			+ " AND price = :price "
+ 			+ " AND area_total = :areaTotal "
+ 			+ " AND area_usable = :areaUsable ", nativeQuery = true)
+	List<Estate> findDuplicatesByPriceAndArea(@Param("price") final Long price,
+			@Param("areaTotal") final Integer areaTotal, @Param("areaUsable") final Integer areaUsable);
 
  	@Query(value = "SELECT * FROM estate "
- 			+ " WHERE created_at > NOW() - INTERVAL '3 month' "
- 			+ " AND address LIKE ? "
- 			+ " AND area_total = ? "
- 			+ " AND area_usable = ? ", nativeQuery = true)
- 	List<Estate> findAllDuplicateByAddress(final String address,
- 			final Integer area_total, final Integer area_usable);
+ 			+ " WHERE created_at >= DATEADD(MONTH, -3, GETDATE()) "
+ 			+ " AND address LIKE :address "
+ 			+ " AND area_total = :areaTotal "
+ 			+ " AND area_usable = :areaUsable ", nativeQuery = true)
+	List<Estate> findDuplicatesByAddressAndArea(@Param("address") final String address,
+			@Param("areaTotal") final Integer areaTotal, @Param("areaUsable") final Integer areaUsable);
 
 	@Modifying
 	@Query("UPDATE Estate e SET e.stars = :stars WHERE e.srealityId = :srealityId")

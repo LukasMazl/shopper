@@ -5,9 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import lombok.val;
-
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.hateoas.Resource;
@@ -22,7 +19,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.janprach.shopper.sreality.api.Estate;
 import com.janprach.shopper.sreality.api.EstateListing.EstateListingEmbedded.EstateSummary;
 
-@Ignore("Nope, seznam is not using Spring's implementation - we have to have custom.")
+import lombok.val;
+
+@org.junit.Ignore("Nope, seznam is not using Spring's implementation - we have to have custom.")
 public class RestTemplateTest {
 	private static final String ESTATES_URL = "http://www.sreality.cz/api/cs/v1/estates";
 

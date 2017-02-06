@@ -7,16 +7,11 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.janprach.shopper.ShopperApp;
+import com.janprach.shopper.ShopperITBase;
 import com.janprach.shopper.sreality.entity.Estate;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = ShopperApp.class)
-public class EstateRepositoryITCase {
+public class EstateRepositoryITCase extends ShopperITBase {
 	@Inject
 	EstateRepository repository;
 

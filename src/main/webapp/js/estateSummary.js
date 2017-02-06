@@ -87,7 +87,7 @@ shopperModule.controller('estateRatingController', function ($scope, $http) {
 	$scope.setStars = function() {
 		if ($scope.estate.stars == $scope.starsOld)
 			$scope.estate.stars = 0;
-		var url = '/api/v1/vote';
+		var url = '/api/v1/star';
 		var params = {
 			'srealityId': $scope.estate.srealityId,
 			'stars': $scope.estate.stars,
@@ -101,7 +101,7 @@ shopperModule.controller('estateVisibleController', function ($scope, $http) {
 	$scope.estate = undefined;
 	
 	$scope.setVisible = function() {
-		var url = '/api/v1/setVisible';
+		var url = '/api/v1/visible';
 		var params = {
 			'srealityId': $scope.estate.srealityId,
 			'visible': $scope.estate.visible,
@@ -114,7 +114,7 @@ shopperModule.controller('estateNoteController', function ($scope, $http) {
 	$scope.estate = undefined;
 	
 	$scope.setNote = function() {
-		var url = '/api/v1/setNote';
+		var url = '/api/v1/note';
 		var params = {
 			'srealityId': $scope.estate.srealityId,
 			'note': $scope.estate.note,

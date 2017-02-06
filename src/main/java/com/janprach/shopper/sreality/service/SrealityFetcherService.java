@@ -26,7 +26,6 @@ import org.springframework.stereotype.Component;
 
 import com.codepoetics.protonpack.StreamUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.janprach.shopper.config.SrealityFetcherConfig;
 import com.janprach.shopper.sreality.api.Estate.Geo;
 import com.janprach.shopper.sreality.api.EstateListing;
@@ -42,6 +41,7 @@ import com.janprach.shopper.sreality.util.CoordinateUtils.Coordinates;
 @Component
 public class SrealityFetcherService {
 	private static final int ESTATE_SUMMARIES_PER_PAGE = 20;
+	private static final int MAX_PAGE_NUMBER = 60;
 	private static final int MAX_RETRIES = 3;
 
 	private final Client client;
@@ -69,7 +69,7 @@ public class SrealityFetcherService {
 			int countDeleted = this.estateService.updateInactive(srealityIds);
 			log.info("Deleted " + countDeleted + " estates");
 		} catch (Exception e) {
-			log.error("", e);
+			log.error("Error fetching and storing estates.", e);
 		}
 	}
 
@@ -81,7 +81,8 @@ public class SrealityFetcherService {
 			if (estateNew == null) {
 				return false;
 			}
-			return estateService.convertAndInsert(estateNew);
+			estateService.convertAndInsert(estateNew);
+			return true;
 		} else {
 			if (estateEquals(estateOld, estateSummary)) {
 				// not changed
@@ -92,7 +93,8 @@ public class SrealityFetcherService {
 				if (estateNew == null) {
 					return false;
 				}
-				return estateService.convertAndUpdate(estateOld, estateNew);
+				estateService.convertAndUpdate(estateOld, estateNew);
+				return true;
 			}
 		}
 	}
@@ -116,17 +118,14 @@ public class SrealityFetcherService {
 	}
 
 	Stream<EstateSummary> fetchEstateSummaries() {
-		Stream<Optional<EstateListing>> infiniteEstateListings = IntStream.iterate(1, page -> page + 1)
+		Stream<Optional<EstateListing>> pagingEstateListingStream = IntStream.range(1, MAX_PAGE_NUMBER)
 				.mapToObj(page -> this.fetchEstateListing(page, ESTATE_SUMMARIES_PER_PAGE));
-		Stream<Optional<EstateListing>> estateListings = StreamUtils.takeWhile(infiniteEstateListings,
+		Stream<Optional<EstateListing>> estateListings = StreamUtils.takeWhile(pagingEstateListingStream,
 				el -> el.isPresent() && !el.get().getEmbedded().getEstates().isEmpty());
 		return estateListings.flatMap(el -> el.get().getEmbedded().getEstates().stream());
 	}
 
 	private Optional<EstateListing> fetchEstateListing(final int page, final int perPage) {
-		if (page > 60)
-			return null;
-		
 		// http://www.sreality.cz/api/cs/v1/estates?category_main_cb=2&category_type_cb=1&locality_region_id=10&per_page=60&page=2
 		val sanitizedPage = Math.max(1, page);
 		val sanitizedPerPage = Math.max(20, Math.min(60, perPage));
@@ -157,7 +156,7 @@ public class SrealityFetcherService {
 				}
 			}
 		} catch (final Exception e) {
-			throw new UncheckedExecutionException("Failed fetching or parsing estate listing page " + page + " (x" + perPage + ").", e);
+			throw new RuntimeException("Failed fetching or parsing estate listing page " + page + " (x" + perPage + ").", e);
 		}
 		return Optional.<EstateListing> empty();
 	}

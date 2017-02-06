@@ -73,7 +73,7 @@ public class Estate extends EntityBase {
 	@Column
 	private Integer zoom;
 
-	@Column(name = "date_sort")
+	@Column
 	protected Date dateSort;
 
 	@Column
