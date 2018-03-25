@@ -14,6 +14,12 @@ public class Locality {
 	private String categoryTypeCb;
 	@JsonProperty("locality")
 	private String locality;
+
+	// Filter only fields (should we make separate class Filter?)
 	@JsonProperty("locality_region_id")
 	private String localityRegionId;
+	@JsonProperty("suggested_districtId")
+	private Long suggestedDistrictId;
+	@JsonProperty("suggested_regionId")
+	private Long suggestedRegionId;
 }

@@ -1,7 +1,9 @@
 package com.janprach.shopper.sreality.api;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import lombok.Data;
 
@@ -18,6 +20,10 @@ public class EstateListing {
 	private String categoryInstrumental;
 	@JsonProperty("filter")
 	private Locality filter;
+	@JsonProperty("filterLabels")
+	private List<String> filterLabels = new ArrayList<>();
+	@JsonProperty("filterLabels2")
+	private Map<String, String> filterLabels2 = new HashMap<>();
 	@JsonProperty("locality")
 	private String locality;
 	@JsonProperty("locality_dativ")
@@ -51,15 +57,33 @@ public class EstateListing {
 		@Data
 		public static class EstateSummary {
 			@JsonProperty("_embedded")
-			private EstatesSummaryEmbedded embedded;
+			private EstateSummaryEmbedded embedded;
 			@JsonProperty("_links")
 			private Links links;
 			@JsonProperty("attractive_offer")
 			private Long attractiveOffer;
+			@JsonProperty("auctionPrice")
+			private Long auctionPrice;
+			@JsonProperty("category")
+			private Long category;
+			@JsonProperty("gps")
+			private Gps gps;
+			@JsonProperty("has_floor_plan")
+			private Boolean hasFloorPlan;
+			@JsonProperty("has_panorama")
+			private Boolean hasPanorama;
 			@JsonProperty("has_video")
 			private Boolean hasVideo;
 			@JsonProperty("hash_id")
 			private Long hashId;
+			@JsonProperty("is_auction")
+			private Boolean isAuction;
+			@JsonProperty("labels")
+			private List<String> labels = new ArrayList<>();
+			@JsonProperty("labelsAll")
+			private List<List<String>> labelsAll = new ArrayList<>();
+			@JsonProperty("labelsReleased")
+			private List<List<String>> labelsReleased = new ArrayList<>();
 			@JsonProperty("locality")
 			private String locality;
 			@JsonProperty("name")
@@ -78,15 +102,25 @@ public class EstateListing {
 			private Boolean rus;
 			@JsonProperty("seo")
 			private Locality seo;
+			@JsonProperty("type")
+			private Long type;
 
 			@Data
-			public static class EstatesSummaryEmbedded {
+			public static class EstateSummaryEmbedded {
 				@JsonProperty("company")
 				private Object company;
 				@JsonProperty("favourite")
 				private Object favourite;
 				@JsonProperty("note")
-				private Object note;
+				private Note note;
+			}
+
+			@Data
+			public static class Gps {
+				@JsonProperty("lat")
+				private Double lat;
+				@JsonProperty("lon")
+				private Double lon;
 			}
 		}
 	}
