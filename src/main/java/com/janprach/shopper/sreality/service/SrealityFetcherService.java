@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SrealityFetcherService {
 	private final EstateFetcherService estateFetcherService;
 	private final EstateService estateService;
+	private final ImageFetcherService imageFetcherService;
 	private final SrealityUrlTranslationService srealityUrlTranslationService;
 
 	// @Scheduled(cron = "${com.janprach.shopper.sreality.cron}")
@@ -61,7 +63,17 @@ public class SrealityFetcherService {
 		if (estateOld == null) {
 			// new
 			val estateNew = fetchEstate(estateHashId);
-			estateNew.ifPresent(e -> estateService.convertAndInsert(e));
+			estateNew.ifPresent(estate -> {
+				for (val image : estate.getImages()) {
+					val imageMetaDataOption = imageFetcherService.fetchAndSaveImage(image.getUrl());
+					imageMetaDataOption.ifPresent(imageMetaData -> {
+						image.setSha1(imageMetaData.getSha1());
+						image.setWidth(imageMetaData.getWidth());
+						image.setHeight(imageMetaData.getHeight());
+					});
+				}
+				estateService.convertAndInsert(estate);
+			});
 			return estateNew;
 		} else {
 			if (estateEquals(estateOld, estateSummary)) {
@@ -112,11 +124,12 @@ public class SrealityFetcherService {
 		estateEntity.setZoom(estateSreality.getMap().getZoom());
 		estateEntity.setDateSort(new Date());
 
-		val images = estateSreality.getEmbedded().getImages().stream().map(image -> {
-			final String imageDescription = image.getLinks().getSelf().getTitle();
-			final Long imageSrealityId = image.getId();
-			final String imageUrl = image.getLinks().getSelf().getHref();
-			return new Image(imageDescription, estateEntity, imageSrealityId, imageUrl);
+		val imagesSreality = estateSreality.getEmbedded().getImages();
+		val images = imagesSreality.stream().filter(i -> i != null && i.getLinks() != null).flatMap(image -> {
+			val srealityId = image.getId();
+			val links = image.getLinks();
+			val linkStream = Stream.of(links.getSelf(), links.getGallery(), links.getView()).filter(l -> l != null);
+			return linkStream.map(l -> new Image(l.getTitle(), estateEntity, srealityId, l.getHref(), null, null, null));
 		}).collect(Collectors.toList());
 		estateEntity.setImages(images);
 

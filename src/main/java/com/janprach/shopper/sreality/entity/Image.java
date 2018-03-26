@@ -7,13 +7,13 @@ import javax.persistence.ManyToOne;
 
 import org.springframework.data.rest.core.annotation.RestResource;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Data
 @NoArgsConstructor
@@ -40,4 +40,13 @@ public class Image extends EntityBase {
 
 	@Column(nullable = false)
 	private String url;
+
+	@Column
+	private String sha1;
+
+	@Column
+	private Integer width;
+
+	@Column
+	private Integer height;
 }
