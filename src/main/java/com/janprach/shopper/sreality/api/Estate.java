@@ -115,7 +115,7 @@ public class Estate {
 		@JsonProperty("negotiation")
 		private Boolean negotiation;
 		@JsonProperty("notes")
-		private List<Note> notes = new ArrayList<>();
+		private List<Object> notes = new ArrayList<>();
 		@JsonProperty("type")
 		private String type;
 		@JsonProperty("unit")

@@ -1,53 +1,35 @@
 package com.janprach.shopper.sreality.service;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import jersey.repackaged.com.google.common.base.Objects;
-import lombok.AllArgsConstructor;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.codepoetics.protonpack.StreamUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.janprach.shopper.config.SrealityFetcherConfig;
 import com.janprach.shopper.sreality.api.Estate.Geo;
-import com.janprach.shopper.sreality.api.EstateListing;
 import com.janprach.shopper.sreality.api.EstateListing.EstateListingEmbedded.EstateSummary;
 import com.janprach.shopper.sreality.entity.Estate;
 import com.janprach.shopper.sreality.entity.Image;
 import com.janprach.shopper.sreality.entity.RawResponse;
+import com.janprach.shopper.sreality.service.RichHttpClient.EntityWithRawResponse;
 import com.janprach.shopper.sreality.util.CoordinateUtils;
 import com.janprach.shopper.sreality.util.CoordinateUtils.Coordinates;
+
+import lombok.AllArgsConstructor;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @AllArgsConstructor(onConstructor = @__({ @javax.inject.Inject }))
 @Component
 public class SrealityFetcherService {
-	private static final int ESTATE_SUMMARIES_PER_PAGE = 20;
-	private static final int MAX_PAGE_NUMBER = 60;
-	private static final int MAX_RETRIES = 3;
-
-	private final Client client;
+	private final EstateFetcherService estateFetcherService;
 	private final EstateService estateService;
-	private final ObjectMapper objectMapper;
-	private final SrealityFetcherConfig srealityFetcherConfig;
 	private final SrealityUrlTranslationService srealityUrlTranslationService;
 
 	// @Scheduled(cron = "${com.janprach.shopper.sreality.cron}")
@@ -56,127 +38,58 @@ public class SrealityFetcherService {
 		try {
 			int countSaved = 0;
 			HashSet<Long> srealityIds = new HashSet<>();
-			Iterator<EstateSummary> iterator = fetchEstateSummaries().iterator();
+			Iterator<EstateSummary> iterator = this.estateFetcherService.fetchEstateSummaries().iterator();
 			while (iterator.hasNext()) {
 				EstateSummary estateSummary = iterator.next();
 				srealityIds.add(estateSummary.getHashId());
-				if (fetchAndStoreEstateSummary(estateSummary)) {
+				if (fetchAndStoreEstateSummary(estateSummary).isPresent()) {
 					countSaved++;
 				}
 			}
-			log.info("Saved " + countSaved + " estates");
+			log.info("Saved {} estates.", countSaved);
 
 			int countDeleted = this.estateService.updateInactive(srealityIds);
-			log.info("Deleted " + countDeleted + " estates");
+			log.info("Deleted {} estates.", countDeleted);
 		} catch (Exception e) {
 			log.error("Error fetching and storing estates.", e);
 		}
 	}
 
-	private boolean fetchAndStoreEstateSummary(EstateSummary estateSummary) throws Exception {
-		Estate estateOld = this.estateService.findBySrealityId(estateSummary.getHashId());
+	private Optional<Estate> fetchAndStoreEstateSummary(final EstateSummary estateSummary) {
+		val estateHashId = estateSummary.getHashId();
+		val estateOld = this.estateService.findBySrealityId(estateHashId);
 		if (estateOld == null) {
 			// new
-			Estate estateNew = fetchEstate(estateSummary);
-			if (estateNew == null) {
-				return false;
-			}
-			estateService.convertAndInsert(estateNew);
-			return true;
+			val estateNew = fetchEstate(estateHashId);
+			estateNew.ifPresent(e -> estateService.convertAndInsert(e));
+			return estateNew;
 		} else {
 			if (estateEquals(estateOld, estateSummary)) {
 				// not changed
-				return false;
+				return Optional.empty();
 			} else {
 				// changed
-				Estate estateNew = fetchEstate(estateSummary);
-				if (estateNew == null) {
-					return false;
-				}
-				estateService.convertAndUpdate(estateOld, estateNew);
-				return true;
+				val estateNew = fetchEstate(estateHashId);
+				estateNew.ifPresent(e -> estateService.convertAndUpdate(estateOld, e));
+				return estateNew;
 			}
 		}
 	}
 
 	private boolean estateEquals(final Estate estateOld, final EstateSummary estateSummary) {
 		return estateOld.getActive()
-				&& Objects.equal(estateOld.getSrealityId(), estateSummary.getHashId())
-				&& Objects.equal(estateOld.getPrice(), estateSummary.getPrice());
+				&& Objects.equals(estateOld.getSrealityId(), estateSummary.getHashId())
+				&& Objects.equals(estateOld.getPrice(), estateSummary.getPrice());
 	}
 
-	private Estate fetchEstate(EstateSummary estateSummary) throws Exception {
-		val estateHashId = estateSummary.getHashId();
-		try {
-			val estateResponse = this.fetchEstate(estateHashId);
-			val estateResponseString = estateResponse.readEntity(String.class);
-			val estate = this.parseEstate(estateHashId, estateResponseString);
-			return estate;
-		} catch (final Exception e) {
-			throw new Exception("Failed fetching or parsing estate id " + estateHashId + ".", e);
-		}
+	private Optional<Estate> fetchEstate(final long estateHashId) {
+		val estateWithRawResponse = this.estateFetcherService.fetchEstateWithRawResponse(estateHashId);
+		return estateWithRawResponse.map(ewrr -> this.parseEstate(estateHashId, ewrr));
 	}
 
-	Stream<EstateSummary> fetchEstateSummaries() {
-		Stream<Optional<EstateListing>> pagingEstateListingStream = IntStream.range(1, MAX_PAGE_NUMBER)
-				.mapToObj(page -> this.fetchEstateListing(page, ESTATE_SUMMARIES_PER_PAGE));
-		Stream<Optional<EstateListing>> estateListings = StreamUtils.takeWhile(pagingEstateListingStream,
-				el -> el.isPresent() && !el.get().getEmbedded().getEstates().isEmpty());
-		return estateListings.flatMap(el -> el.get().getEmbedded().getEstates().stream());
-	}
-
-	private Optional<EstateListing> fetchEstateListing(final int page, final int perPage) {
-		// http://www.sreality.cz/api/cs/v1/estates?category_main_cb=2&category_type_cb=1&locality_region_id=10&per_page=60&page=2
-		val sanitizedPage = Math.max(1, page);
-		val sanitizedPerPage = Math.max(20, Math.min(60, perPage));
-		log.debug("Fetching estate listing page {} (x{}) ...", page, perPage);
-		try {
-			Thread.sleep(1000L + (long) (Math.random() * 3000L));
-			for (int retries = 0; retries < MAX_RETRIES; retries++) {
-				val estateListingRespose = this.fetchSrealityEstate(wt -> {
-					wt = this.addParam(wt, "category_main_cb", srealityFetcherConfig.getCategoryMain());
-					wt = this.addParam(wt, "category_sub_cb", srealityFetcherConfig.getCategorySub());
-					wt = this.addParam(wt, "category_type_cb", srealityFetcherConfig.getCategoryType());
-					wt = this.addParam(wt, "locality_district_id", srealityFetcherConfig.getLocalityDistrict());
-					wt = this.addParam(wt, "locality_region_id", srealityFetcherConfig.getLocalityRegion());
-					wt = this.addParam(wt, "czk_price_summary_order2", srealityFetcherConfig.getPriceRange());
-					wt = wt.queryParam("per_page", Integer.toString(sanitizedPerPage));
-					wt = wt.queryParam("page", Integer.toString(sanitizedPage));
-					return wt;
-				});
-				val statusFamily = estateListingRespose.getStatusInfo().getFamily();
-				if (statusFamily == Response.Status.Family.SERVER_ERROR && retries < MAX_RETRIES) {
-					val sleepTime = 60 * (1 << retries);
-					val responseString = estateListingRespose.readEntity(String.class);
-					log.warn("Server error (http status 5xx). Retry in {} s.\n{}", sleepTime, responseString);
-					Thread.sleep(1000L * sleepTime);
-				} else {
-					val estateListing = estateListingRespose.readEntity(EstateListing.class);
-					return Optional.of(estateListing);
-				}
-			}
-		} catch (final Exception e) {
-			throw new RuntimeException("Failed fetching or parsing estate listing page " + page + " (x" + perPage + ").", e);
-		}
-		return Optional.<EstateListing> empty();
-	}
-
-	private Response fetchEstate(final long estateHashId) {
-		// http://www.sreality.cz/api/cs/v1/estates/3410497628
-		log.debug("Fetching estate id {} ...", estateHashId);
-		return this.fetchSrealityEstate(wt -> wt.path(Long.toString(estateHashId)));
-	}
-
-	private Response fetchSrealityEstate(final Function<WebTarget, WebTarget> webTargetModifier) {
-		val estatesWebTarget = this.client.target("https://www.sreality.cz").path("/api/cs/v1/estates");
-		val webTarget = webTargetModifier.apply(estatesWebTarget);
-		log.debug("Fetching {}", webTarget.getUri());
-		return webTarget.request(MediaType.APPLICATION_JSON_TYPE)
-				.header("User-Agent", this.srealityFetcherConfig.getUserAgentString()).get();
-	}
-
-	private Estate parseEstate(final long estateHashId, final String estateResponseString) throws IOException {
-		val estateSreality = this.objectMapper.readValue(estateResponseString, com.janprach.shopper.sreality.api.Estate.class);
+	private Estate parseEstate(final long estateHashId,
+			final EntityWithRawResponse<com.janprach.shopper.sreality.api.Estate> estateWithRawResponse) {
+		val estateSreality = estateWithRawResponse.getValue();
 		val items = estateSreality.getItems().stream().collect(Collectors.toMap(i -> i.getName(), i -> i.getValue()));
 		val coordinates = this.getCoordinates(estateSreality.getMap());
 
@@ -207,7 +120,7 @@ public class SrealityFetcherService {
 		}).collect(Collectors.toList());
 		estateEntity.setImages(images);
 
-		val rawResponse = new RawResponse(estateEntity, estateResponseString);
+		val rawResponse = new RawResponse(estateEntity, estateWithRawResponse.getRawResponse());
 		estateEntity.getRawResponses().add(rawResponse);
 
 		return estateEntity;
@@ -216,14 +129,6 @@ public class SrealityFetcherService {
 	private Integer parseInteger(final Map<String, Object> map, final String key) {
 		val value = map.get(key);
 		return value == null ? null : Integer.parseInt(value.toString());
-	}
-
-	private WebTarget addParam(final WebTarget webTarget, final String name, final String value) {
-		if (value == null) {
-			return webTarget;
-		} else {
-			return webTarget.queryParam(name, value);
-		}
 	}
 
 	private Coordinates getCoordinates(final Geo geo) {

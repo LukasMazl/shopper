@@ -1,18 +1,18 @@
 package com.janprach.shopper.config;
 
-import javax.ws.rs.ext.ContextResolver;
-import javax.ws.rs.ext.Provider;
-
-import lombok.val;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-@Provider
-public class ObjectMapperProvider implements ContextResolver<ObjectMapper> {
-	@Override
-	public ObjectMapper getContext(final Class<?> type) {
+import lombok.val;
+
+@Configuration
+public class ObjectMapperConfig {
+	@Bean
+	public ObjectMapper objectMapper() {
 		val objectMapper = new ObjectMapper();
 		objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);

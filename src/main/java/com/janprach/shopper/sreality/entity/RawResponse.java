@@ -33,5 +33,5 @@ public class RawResponse extends EntityBase {
 	private Estate estate;
 
 	@Column(length = 1 * 1024 * 1024, nullable = false)
-	private String rawResponseString;
+	private byte[] rawResponseString;
 }
