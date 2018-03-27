@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -127,13 +127,13 @@ public class EstateService {
 			}
 		}
 
-		this.imageRepository.save(images);
-		this.rawResponseRepository.save(rawResponses);
+		this.imageRepository.saveAll(images);
+		this.rawResponseRepository.saveAll(rawResponses);
 	}
 
 	@Transactional
 	public void convertAndUpdate(Estate estateOld, Estate estateNew) {
-		estateOld = this.estateRepository.findOne(estateOld.getId());
+		estateOld = this.estateRepository.getOne(estateOld.getId());
 
 		resetDateSortIfPriceChanged(estateOld, estateOld.getPrice(), estateNew.getPrice());
 

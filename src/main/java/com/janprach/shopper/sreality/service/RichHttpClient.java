@@ -1,12 +1,11 @@
 package com.janprach.shopper.sreality.service;
 
-import java.io.IOException;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.AllArgsConstructor;
 import lombok.Value;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -28,26 +28,25 @@ public class RichHttpClient {
 	@AllArgsConstructor(onConstructor = @__({ @javax.inject.Inject }))
 	@Component
 	public static class RichHttpClientHelper {
-		private final HttpClient httpClient;
+		private final CloseableHttpClient closeableHttpClient;
 
 //		@Cacheable(cacheNames = "httpClient", key = "{ #httpRequest?.method, #httpRequest?.getURI() }")
 		@Cacheable(cacheNames = "httpClient", keyGenerator = "jacksonCacheKeyGenerator")
 		public Optional<byte[]> getByteArray(final HttpUriRequest httpRequest) {
-			return Optional.of(httpRequest).map(request -> {
+			try {
+				val response = closeableHttpClient.execute(httpRequest);
 				try {
-					return httpClient.execute(request);
-				} catch (final IOException e) {
-					log.error("Error fetching " + httpRequest, e);
-					return null;
+					val httpEntity = Optional.ofNullable(response.getEntity());
+					if (httpEntity.isPresent()) {
+						return Optional.ofNullable(IOUtils.toByteArray(httpEntity.get().getContent()));
+					}
+				} finally {
+					response.close();
 				}
-			}).map(response -> response.getEntity()).map(httpEntity -> {
-				try {
-					return IOUtils.toByteArray(httpEntity.getContent());
-				} catch (final UnsupportedOperationException | IOException e) {
-					log.error("Error fetching " + httpRequest, e);
-					return null;
-				}
-			});
+			} catch (final Exception e) {
+				log.error("Error fetching " + httpRequest, e);
+			}
+			return Optional.empty();
 		}
 	}
 

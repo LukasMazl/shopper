@@ -52,8 +52,7 @@ public class SeznamPagedResources<T> extends Resources<T> {
 
 	@SuppressWarnings("unchecked")
 	public static <T extends Resource<S>, S> SeznamPagedResources<T> wrap(Iterable<S> content, int page, int perPage) {
-
-		Assert.notNull(content);
+		Assert.notNull(content, "content cannot be null");
 		ArrayList<T> resources = new ArrayList<T>();
 
 		for (S element : content) {
