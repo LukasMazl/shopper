@@ -8,12 +8,14 @@ import javax.inject.Inject;
 
 import org.assertj.core.api.Condition;
 import org.junit.Test;
+import org.springframework.cache.annotation.EnableCaching;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.janprach.shopper.ShopperITBase;
 
 import lombok.val;
 
+@EnableCaching
 //@org.junit.Ignore("This query the actual sreality server.")
 public class EstateFetcherServiceITCase extends ShopperITBase {
 	@Inject

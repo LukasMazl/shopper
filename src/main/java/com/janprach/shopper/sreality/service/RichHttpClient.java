@@ -7,6 +7,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,25 +20,39 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @javax.inject.Inject }))
 @Component
 public class RichHttpClient {
-	private final HttpClient httpClient;
 	private final ObjectMapper objectMapper;
+	private final RichHttpClientHelper richHttpClientHelper;
+
+	// The helper class is just a hack allowing us to call getByteArray
+	// with caching aspect woven into richHttpClientHelper.
+	@AllArgsConstructor(onConstructor = @__({ @javax.inject.Inject }))
+	@Component
+	public static class RichHttpClientHelper {
+		private final HttpClient httpClient;
+
+//		@Cacheable(cacheNames = "httpClient", key = "{ #httpRequest?.method, #httpRequest?.getURI() }")
+		@Cacheable(cacheNames = "httpClient", keyGenerator = "jacksonCacheKeyGenerator")
+		public Optional<byte[]> getByteArray(final HttpUriRequest httpRequest) {
+			return Optional.of(httpRequest).map(request -> {
+				try {
+					return httpClient.execute(request);
+				} catch (final IOException e) {
+					log.error("Error fetching " + httpRequest, e);
+					return null;
+				}
+			}).map(response -> response.getEntity()).map(httpEntity -> {
+				try {
+					return IOUtils.toByteArray(httpEntity.getContent());
+				} catch (final UnsupportedOperationException | IOException e) {
+					log.error("Error fetching " + httpRequest, e);
+					return null;
+				}
+			});
+		}
+	}
 
 	public Optional<byte[]> getByteArray(final HttpUriRequest httpRequest) {
-		return Optional.of(httpRequest).map(request -> {
-			try {
-				return httpClient.execute(request);
-			} catch (final IOException e) {
-				log.error("Error fetching " + httpRequest, e);
-				return null;
-			}
-		}).map(response -> response.getEntity()).map(httpEntity -> {
-			try {
-				return IOUtils.toByteArray(httpEntity.getContent());
-			} catch (final UnsupportedOperationException | IOException e) {
-				log.error("Error fetching " + httpRequest, e);
-				return null;
-			}
-		});
+		return this.richHttpClientHelper.getByteArray(httpRequest);
 	}
 
 	public <T> Optional<T> getEntity(final HttpUriRequest httpRequest, final Class<T> valueType) {
