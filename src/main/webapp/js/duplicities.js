@@ -35,8 +35,9 @@ duplicitiesModule.controller('duplicitiesController', function ($scope, $http, $
 
 	$scope.init = function() {
 		$scope.searchDuplicityId = parseInt($location.search()['searchDuplicityId']) || '';
-		if ($scope.searchDuplicityId != '')
+		if ($scope.searchDuplicityId != '') {
 			fetchEstates();
+		}
 	}
 
 	$scope.searchSubmit = function() {

@@ -53,8 +53,12 @@ estateListingModule.controller('estateListingController', function ($scope, $htt
     return new Date(timestamp).toLocaleFormat('%d.%m.%Y');
   }
 
-  $scope.smallImageUrl = function(bigImageUrl) {
-    return bigImageUrl.replace("img.sreality.cz/big/", "img.sreality.cz/middle/");
+  $scope.imageUrl = function(image) {
+    return '/images/original/' + image.sha1 + '.jpg';
+  }
+
+  $scope.thumbnailUrl = function(image) {
+    return '/images/thumbnails/' + image.sha1 + '.jpg';
   }
 
   $scope.numberWithSpaces = function(number) {

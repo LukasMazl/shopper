@@ -84,8 +84,8 @@
 		</tr>
 	</table>
 	<div ng-repeat="image in $ctrl.estate.images" ng-if="$index < 1">
-		<a class="fancyboxImage" rel="{{'estate-' + $ctrl.estate.srealityId}}" href="{{image.url}}">
-			<img class="estateImage" ng-src="{{$ctrl.smallImageUrl(image.url)}}"
+		<a class="fancyboxImage" rel="{{'estate-' + $ctrl.estate.srealityId}}" href="{{$ctrl.imageUrl(image)}}">
+			<img class="estateImage" ng-src="{{$ctrl.thumbnailUrl(image)}}"
 					alt="{{image.description}}" height="189" width="248" />
 		</a>
 	</div>
