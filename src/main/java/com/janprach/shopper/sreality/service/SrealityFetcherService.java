@@ -65,14 +65,14 @@ public class SrealityFetcherService {
 			val estateNew = fetchEstate(estateHashId);
 			estateNew.ifPresent(estate -> {
 				for (val image : estate.getImages()) {
-					val imageMetaDataOption = imageFetcherService.fetchAndSaveImage(image.getUrl());
+					val imageMetaDataOption = this.imageFetcherService.fetchAndSaveImage(image.getUrl());
 					imageMetaDataOption.ifPresent(imageMetaData -> {
 						image.setSha1(imageMetaData.getSha1());
 						image.setWidth(imageMetaData.getWidth());
 						image.setHeight(imageMetaData.getHeight());
 					});
 				}
-				estateService.convertAndInsert(estate);
+				this.estateService.convertAndInsert(estate);
 			});
 			return estateNew;
 		} else {
@@ -128,7 +128,8 @@ public class SrealityFetcherService {
 		val images = imagesSreality.stream().filter(i -> i != null && i.getLinks() != null).flatMap(image -> {
 			val srealityId = image.getId();
 			val links = image.getLinks();
-			val linkStream = Stream.of(links.getSelf(), links.getGallery(), links.getView()).filter(l -> l != null);
+//			val linkStream = Stream.of(links.getSelf(), links.getGallery(), links.getView()).filter(l -> l != null);
+			val linkStream = Stream.of(links.getSelf()).filter(l -> l != null);
 			return linkStream.map(l -> new Image(l.getTitle(), estateEntity, srealityId, l.getHref(), null, null, null));
 		}).collect(Collectors.toList());
 		estateEntity.setImages(images);

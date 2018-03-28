@@ -21,5 +21,8 @@ public class SrealityFetcherConfig {
 	private int maxEstateSummaryPageNumber;
 
 	private String imagesDirectory;
+	private String thumbnailsDirectory;
+	private int maxThumbnailSize;
+
 	private String userAgentString;
 }
